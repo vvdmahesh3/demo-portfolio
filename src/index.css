@@ -1,0 +1,299 @@
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ✅ Font utility */
+.font-handwriting {
+  font-family: 'Great Vibes', cursive;
+}
+
+/* ✅ Neon Signature Effect */
+.neon-signature {
+  color: transparent;
+  -webkit-text-stroke: 1px #00ffcc;
+  text-shadow: 0 0 5px #00ffcc, 0 0 10px #00ffcc, 0 0 20px #00ffcc;
+}
+
+/* ✅ Glowing Wave Animation */
+.wave-glow {
+  animation: waveGlow 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px #00ffcc);
+}
+
+/* ✅ SVG Signature Stroke (for future path-based signature drawing) */
+.signature-stroke {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: signatureDraw 3s ease forwards;
+  animation-delay: 0.5s;
+  animation-fill-mode: forwards;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ✅ Animated Pulse Glow */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px #00ffcc, 0 0 10px #00ffcc;
+  }
+  50% {
+    box-shadow: 0 0 15px #00ffcc, 0 0 30px #00ffcc;
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+/* ✅ Fade In Animation */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 1.2s ease-in-out both;
+}
+
+/* ✅ Wave Glow Animation Keyframes */
+@keyframes waveGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px #00ffcc);
+  }
+  50% {
+    filter: drop-shadow(0 0 20px #00ffcc);
+  }
+}
+
+/* ✅ Typewriter Animation */
+.typewriter {
+  overflow: hidden;
+  border-right: 2px solid #00FFB3;
+  white-space: nowrap;
+  animation: typing 3.5s steps(40, end), blinkCursor 0.8s step-start infinite;
+  font-family: monospace;
+  width: fit-content;
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blinkCursor {
+  0%, 100% { border-color: transparent; }
+  50% { border-color: #00FFB3; }
+}
+/* ✅ White Glow Animation for Quote */
+.glow-text {
+  animation: glow 2s ease-in-out infinite alternate;
+  text-shadow: 0 0 5px #ffffff, 0 0 10px #ffffff80, 0 0 20px #ffffff60;
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 2px #fff;
+  }
+  to {
+    text-shadow: 0 0 10px #fff, 0 0 20px #fff;
+  }
+}
+/* Custom Neon Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00FFB3, #00ccff);
+  border-radius: 10px;
+  box-shadow: 0 0 10px #00FFB3;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00FFB3;
+  box-shadow: 0 0 12px #00FFB3;
+}
+
+/* Auto-Fade Scrollbar on Idle (optional) */
+.scrollbar-fade {
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 1s;
+}
+
+.scrollbar-fade:hover {
+  scrollbar-color: #00FFB3 transparent;
+}
+
+
+/* ✅ Glowing Underline for Signature Branding */
+.glow-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #00FFB3, #00ccff, #00FFB3);
+  background-size: 200% auto;
+  animation: neon-underline 3s infinite linear;
+  border-radius: 9999px;
+  box-shadow: 0 0 8px #00FFB3, 0 0 16px #00FFB3;
+}
+
+@keyframes neon-underline {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 100% center;
+  }
+}
+/* Card Flip Animation */
+.perspective {
+  perspective: 1200px;
+}
+.card {
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.8s ease;
+  position: relative;
+  height: 100%;
+}
+.card-front,
+.card-back {
+  backface-visibility: hidden;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+.card-front {
+  z-index: 2;
+}
+.card-back {
+  transform: rotateY(180deg);
+}
+.card:hover {
+  transform: rotateY(180deg);
+}
+
+/* Glow Tag */
+.glow-badge {
+  box-shadow: 0 0 8px #00ffb333;
+  transition: all 0.3s ease-in-out;
+}
+.glow-badge:hover {
+  box-shadow: 0 0 16px #00ffb3aa;
+}
+.skill-chip {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: linear-gradient(90deg, #00ff9f1a, #00ff9f0d);
+  color: #00ff9f;
+  border: 1px solid #00ff9f55;
+  box-shadow: 0 0 10px #00ff9f33;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+}
+/* Typewriter answer style */
+.typewriter-answer {
+  font-family: 'JetBrains Mono', monospace;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typing-answer 2s steps(40, end), blinkCursor 0.8s step-start infinite;
+  border-right: 2px solid #00FFB3;
+}
+
+@keyframes typing-answer {
+  from { width: 0 }
+  to { width: 100% }
+}
+.text-accent.glow-text {
+  text-shadow: 0 0 4px rgba(0, 255, 170, 0.45);
+}
+.glow-soft {
+  text-shadow: 0 0 5px rgba(0, 255, 180, 0.35), 0 0 8px rgba(0, 255, 180, 0.25);
+}
+/* Card Flip */
+.perspective {
+  perspective: 1000px;
+}
+.card {
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+  position: relative;
+}
+.card-front,
+.card-back {
+  backface-visibility: hidden;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+.card-front {
+  z-index: 2;
+}
+.card-back {
+  transform: rotateY(180deg);
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Glow reduction */
+.glow-soft {
+  text-shadow: 0 0 4px rgba(0, 255, 180, 0.3), 0 0 6px rgba(0, 255, 180, 0.2);
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0px rgba(255, 255, 0, 0.6); }
+  50% { box-shadow: 0 0 15px rgba(255, 255, 0, 0.9); }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0px rgba(255, 255, 0, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.9);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+.hover\:shadow-accent-glow:hover {
+  box-shadow: 0 0 8px rgba(0, 255, 170, 0.5);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+/* Glowing Pulse Animation */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0px rgba(0, 255, 170, 0.2); }
+  50% { box-shadow: 0 0 16px rgba(0, 255, 170, 0.6); }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2.2s infinite;
+}
+
+/* Optional: subtle glowing border for play button */
+.glow-play-button {
+  background: radial-gradient(ellipse at center, rgba(0,255,170,0.2), rgba(0,255,170,0));
+  box-shadow: 0 0 10px rgba(0, 255, 170, 0.3);
+  transition: all 0.3s ease-in-out;
+}

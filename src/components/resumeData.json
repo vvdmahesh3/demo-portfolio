@@ -1,0 +1,33 @@
+{
+  "internships": [
+    "HR Intern at The Entrepreneurship Network",
+    "Web Dev Intern at Anurag IT Solutions",
+    "Tech Intern at Vaishnav Technologies",
+    "Project Intern at 1M1B Future Leaders",
+    "Intern at Bharat Intern"
+  ],
+  "skills": [
+    "React.js", "Node.js", "MongoDB",
+    "Python", "JavaScript", "Tailwind CSS",
+    "GitHub", "Postman", "Firebase"
+  ],
+  "education": "B.Tech in Computer Science and Engineering with specialization in AI/ML",
+  "certifications": [
+    "AWS Cloud Practitioner", "Google UX Design",
+    "Microsoft Azure Fundamentals", "IBM AI Engineering",
+    "Responsive Web Design - freeCodeCamp"
+  ],
+  "projects": [
+    "Rythmize (Tkinter Music Player)",
+    "Placement Tracker App",
+    "Faculty Management System",
+    "Portfolio Website",
+    "Smart Attendance System"
+  ],
+  "achievements": [
+    "Top 10 finalist - Techquezt Hackathon",
+    "Published article on AI tools",
+    "Completed 15+ industry certifications",
+    "Selected for 1M1B UN Future Leaders program"
+  ]
+}
