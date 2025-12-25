@@ -1,9 +1,9 @@
 // src/components/MBackground.tsx
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState, useRef } from "react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { 
-  Play, SkipBack, SkipForward, Volume2, 
-  Youtube, Settings, Activity, X 
+  Play, Pause, SkipBack, SkipForward, Volume2, 
+  Youtube, Settings, Activity, X, Share2
 } from "lucide-react";
 
 interface LabProps {
@@ -11,6 +11,26 @@ interface LabProps {
 }
 
 const MBackground: React.FC<LabProps> = ({ onClose }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(65);
+  
+  // Magnetic Effect Logic for the Close Button
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const smoothX = useSpring(mouseX, { stiffness: 150, damping: 15 });
+  const smoothY = useSpring(mouseY, { stiffness: 150, damping: 15 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    mouseX.set(e.clientX - rect.left - rect.width / 2);
+    mouseY.set(e.clientY - rect.top - rect.height / 2);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -18,111 +38,136 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[200] bg-black overflow-hidden flex flex-col items-center justify-center font-mono"
     >
-      {/* Close Button */}
-      <button 
+      {/* MAGNETIC CLOSE BUTTON */}
+      <motion.button 
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
         onClick={onClose}
-        className="absolute top-8 right-8 p-4 rounded-full bg-white/5 hover:bg-white/10 text-white z-[210] transition-all group"
+        style={{ x: smoothX, y: smoothY }}
+        className="absolute top-10 right-10 p-5 rounded-full bg-white/5 border border-white/10 text-white z-[210] transition-colors hover:bg-[#00FFB3]/10 hover:text-[#00FFB3] group"
       >
-        <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
-      </button>
+        <X size={24} className="group-hover:rotate-90 transition-transform duration-500" />
+      </motion.button>
 
-      {/* 1. CINEMATIC BACKGROUND IDENTITY */}
+      {/* 1. CINEMATIC BACKGROUND */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <motion.h1 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.03 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
+          animate={{ 
+            scale: isPlaying ? [1, 1.05, 1] : 1,
+            opacity: isPlaying ? [0.03, 0.06, 0.03] : 0.03 
+          }}
+          transition={{ duration: 2, repeat: Infinity }}
           className="text-[60vw] font-black text-white leading-none select-none opacity-[0.03]"
         >
           M
         </motion.h1>
-        {/* Technical Grid Overlay */}
         <div className="absolute inset-0 opacity-[0.05] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]" />
       </div>
 
-      {/* 2. CENTER CONTENT - YOUR NAME REPLACED HERE */}
+      {/* 2. CENTER CONTENT - THE IDENTITY */}
       <div className="relative z-10 text-center px-6">
         <motion.div 
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.8 }}
+          className="relative"
         >
           <h2 
-            className="text-5xl md:text-8xl font-black text-white tracking-tighter uppercase mb-2 leading-none"
+            className="text-5xl md:text-9xl font-black text-white tracking-tighter uppercase mb-2 leading-none"
             style={{ 
-                textShadow: "0 0 35px rgba(255, 255, 255, 0.2)",
+                textShadow: "0 0 50px rgba(0, 255, 179, 0.2)",
                 fontFamily: "var(--font-mono), monospace" 
             }}
           >
-            V V D MAHESH <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00FFB3] to-cyan-400" style={{ filter: "drop-shadow(0 0 20px rgba(0,255,179,0.5))" }}>PERURI</span>
+            V V D MAHESH <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00FFB3] to-cyan-400" style={{ filter: "drop-shadow(0 0 25px rgba(0,255,179,0.6))" }}>PERURI</span>
           </h2>
           
-          {/* Subtle line decoration matching the "Architecture" vibe */}
-          <motion.div 
-            initial={{ width: 0 }}
-            animate={{ width: "100%" }}
-            transition={{ delay: 0.8, duration: 1 }}
-            className="h-[1px] bg-gradient-to-r from-transparent via-[#00FFB3]/40 to-transparent mt-4"
-          />
+          <div className="flex justify-center items-center gap-4 mt-6">
+            <div className="h-[1px] w-20 bg-gradient-to-r from-transparent to-[#00FFB3]/40" />
+            <span className="text-[10px] tracking-[0.6em] text-[#00FFB3] uppercase font-bold animate-pulse">Neural Workspace Active</span>
+            <div className="h-[1px] w-20 bg-gradient-to-l from-transparent to-[#00FFB3]/40" />
+          </div>
         </motion.div>
       </div>
 
-      {/* 3. THE MUSIC DOCK (SKELETON) */}
+      {/* 3. THE INTERACTIVE MUSIC COMMANDER */}
       <motion.div 
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 25, delay: 0.4 }}
-        className="absolute bottom-10 w-full max-w-4xl px-6"
+        className="absolute bottom-10 w-full max-w-5xl px-6"
       >
-        <div className="h-24 rounded-[32px] bg-zinc-950/60 backdrop-blur-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between px-8 relative group overflow-hidden">
+        <div className="h-28 rounded-[40px] bg-zinc-950/40 backdrop-blur-3xl border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.8)] flex items-center justify-between px-10 relative group overflow-hidden">
           
-          {/* Animated border glow */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00FFB3]/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+          {/* Scanning Line Effect */}
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-[#00FFB3]/20 animate-[scan_4s_linear_infinite]" />
 
-          {/* Left: Metadata */}
-          <div className="flex items-center gap-4 relative z-10">
-            <div className="w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center shadow-lg border border-white/5 relative overflow-hidden group/thumb">
-                <div className="absolute inset-0 bg-[#00FFB3]/10 opacity-0 group-hover/thumb:opacity-100 transition-opacity" />
-                <Youtube className="text-zinc-500 group-hover/thumb:text-[#00FFB3] transition-colors" size={20} />
-            </div>
-            <div className="hidden md:block text-left">
-              <h4 className="text-xs font-black text-white uppercase tracking-wider">System Anthem</h4>
-              <p className="text-[9px] text-[#00FFB3] font-bold uppercase tracking-[0.2em] flex items-center gap-2 mt-1">
-                <Activity size={10} className="animate-pulse" /> READY TO SYNC
-              </p>
-            </div>
-          </div>
-
-          {/* Center: Controls */}
+          {/* LEFT: Metadata & Active Viz */}
           <div className="flex items-center gap-6 relative z-10">
-            <button className="text-zinc-600 hover:text-white transition-colors">
-              <SkipBack size={20} />
-            </button>
-            <button className="w-14 h-14 rounded-full bg-[#00FFB3] flex items-center justify-center text-black shadow-[0_0_25px_rgba(0,255,179,0.4)] hover:scale-110 active:scale-95 transition-all">
-              <Play size={24} fill="currentColor" className="ml-1" />
-            </button>
-            <button className="text-zinc-600 hover:text-white transition-colors">
-              <SkipForward size={20} />
-            </button>
-          </div>
-
-          {/* Right: Hub */}
-          <div className="flex items-center gap-6 relative z-10">
-            <div className="hidden sm:flex items-center gap-3">
-              <Volume2 size={16} className="text-zinc-500" />
-              <div className="w-20 h-1 bg-white/10 rounded-full overflow-hidden">
-                <motion.div 
-                  animate={{ width: ["30%", "70%", "45%"] }} 
-                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                  className="h-full bg-[#00FFB3]" 
-                  style={{ boxShadow: "0 0 10px #00FFB3" }}
-                />
+            <div className="w-16 h-16 rounded-[24px] bg-zinc-900 border border-white/5 flex items-center justify-center relative overflow-hidden group/thumb shadow-2xl">
+                <Youtube className={`transition-all duration-500 ${isPlaying ? 'text-[#00FFB3] scale-110' : 'text-zinc-600'}`} size={24} />
+                {isPlaying && (
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-[#00FFB3] animate-pulse" />
+                )}
+            </div>
+            <div className="hidden lg:block text-left">
+              <h4 className="text-xs font-black text-white uppercase tracking-wider mb-1">System Anthem</h4>
+              <div className="flex items-center gap-2">
+                <div className="flex gap-[2px] items-end h-3">
+                   {[0.4, 0.7, 0.3, 0.9].map((h, i) => (
+                     <motion.div 
+                       key={i}
+                       animate={{ height: isPlaying ? ["20%", "100%", "20%"] : "20%" }}
+                       transition={{ repeat: Infinity, duration: h + 0.5, delay: i * 0.1 }}
+                       className="w-[2px] bg-[#00FFB3]"
+                     />
+                   ))}
+                </div>
+                <p className="text-[9px] text-[#00FFB3] font-bold uppercase tracking-[0.2em]">Ready to Sync</p>
               </div>
             </div>
-            <Settings size={18} className="text-zinc-500 animate-[spin_10s_linear_infinite] hover:text-white transition-colors cursor-pointer" />
+          </div>
+
+          {/* CENTER: Playback Engine */}
+          <div className="flex items-center gap-8 relative z-10">
+            <button className="text-zinc-600 hover:text-white transition-all hover:scale-110"><SkipBack size={22} /></button>
+            
+            <button 
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="w-16 h-16 rounded-full bg-[#00FFB3] flex items-center justify-center text-black shadow-[0_0_30px_rgba(0,255,179,0.5)] hover:scale-110 active:scale-95 transition-all"
+            >
+              {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
+            </button>
+
+            <button className="text-zinc-600 hover:text-white transition-all hover:scale-110"><SkipForward size={22} /></button>
+          </div>
+
+          {/* RIGHT: System Utilities */}
+          <div className="flex items-center gap-8 relative z-10">
+            <div className="hidden sm:flex items-center gap-4">
+              <Volume2 size={18} className="text-zinc-500" />
+              <input 
+                type="range" 
+                min="0" max="100" 
+                value={volume}
+                onChange={(e) => setVolume(parseInt(e.target.value))}
+                className="w-24 accent-[#00FFB3] bg-white/10 h-1 rounded-full cursor-pointer hover:accent-[#00FFB3] transition-all"
+              />
+            </div>
+            <div className="flex gap-4">
+              <Share2 size={18} className="text-zinc-500 hover:text-white cursor-pointer transition-colors" />
+              <Settings size={18} className={`text-zinc-500 cursor-pointer hover:text-white ${isPlaying ? 'animate-[spin_8s_linear_infinite]' : ''}`} />
+            </div>
           </div>
         </div>
       </motion.div>
+
+      <style>{`
+        @keyframes scan {
+          0% { transform: translateY(0); opacity: 0; }
+          50% { opacity: 1; }
+          100% { transform: translateY(112px); opacity: 0; }
+        }
+      `}</style>
     </motion.div>
   );
 };
