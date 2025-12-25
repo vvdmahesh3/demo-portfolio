@@ -21,7 +21,7 @@ const Contact: React.FC = () => {
 
   const socialLinks = [
     { icon: Github, label: "GitHub", href: "https://github.com/vvdmahesh3" },
-    { icon: Linkedin, label: "LinkedIn", href: "https://linkedin.com/in/vvdmahesh3" },
+    { icon: Linkedin, label: "LinkedIn", href: "https://www.linkedin.com/in/vvdmahesh362006/" },
     { icon: Instagram, label: "Instagram", href: "https://instagram.com/im_mahesh_362006" },
     { icon: MessageCircle, label: "WhatsApp", href: "https://wa.me/918106073636" },
     { icon: Globe, label: "Portfolio", href: "https://vvdmahesh3.github.io/demo-portfolio/" },
@@ -113,7 +113,7 @@ const Contact: React.FC = () => {
 
             <motion.a
               whileHover={{ scale: 1.05 }}
-              href="https://linkedin.com/in/vvdmahesh3"
+              href="https://www.linkedin.com/in/vvdmahesh362006/"
               target="_blank"
               rel="noopener noreferrer"
               className="px-8 py-4 rounded-full 

@@ -58,7 +58,7 @@ export default function Hero() {
         </a>
 
         <a
-          href="https://linkedin.com/in/vvdmahesh3"
+          href="https://www.linkedin.com/in/vvdmahesh362006/"
           target="_blank"
           rel="noopener noreferrer"
           className="relative group"
