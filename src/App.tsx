@@ -1,5 +1,7 @@
 // src/App.tsx
 import React, { useState } from "react";
+import { AnimatePresence } from "framer-motion";
+
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import About from "./components/About";
@@ -9,21 +11,20 @@ import Achievements from "./components/Achievements";
 import Resume from "./components/Resume";
 import Contact from "./components/Contact";
 import SuggestionBox from "./components/SuggestionBox";
-import MBackground from "./components/MBackground"; 
+import MBackground from "./components/AnimatePresence/MBackground";
 import SmoothScroll from "./components/SmoothScroll";
-import { AnimatePresence } from "framer-motion";
 
 function App() {
-  // State to manage the Experimental Lab Overlay
   const [isLabOpen, setIsLabOpen] = useState(false);
 
   return (
     <SmoothScroll>
-      <div className="App bg-white dark:bg-[#050505] text-black dark:text-white transition-colors duration-700">
+      <div className="bg-white dark:bg-[#050505] text-black dark:text-white transition-colors duration-700">
         
-        {/* Pass the function to trigger the Lab */}
+        {/* Navbar controls Lab */}
         <Navbar onMClick={() => setIsLabOpen(true)} />
-        
+
+        {/* NORMAL PORTFOLIO */}
         <Hero />
         <About />
         <Projects />
@@ -33,12 +34,13 @@ function App() {
         <Contact />
         <SuggestionBox />
 
-        {/* The Experimental Lab Mode Overlay */}
+        {/* 🚨 LAB OVERLAY — ONLY HERE */}
         <AnimatePresence>
           {isLabOpen && (
             <MBackground onClose={() => setIsLabOpen(false)} />
           )}
         </AnimatePresence>
+
       </div>
     </SmoothScroll>
   );
