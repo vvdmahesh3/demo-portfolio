@@ -49,7 +49,7 @@ const Resume: React.FC = () => {
 
   // Dynamic URL construction for GitHub Pages compatibility
   const resumePdfUrl = `${import.meta.env.BASE_URL}VVD_Mahesh(Resume).pdf`;
-  const API_URL = "https://mahesh-ai-backend.vercel.app";
+  const API_URL = "https://mahesh-backend-hub.onrender.com";
 
   const suggestions = [
     "List internships",
