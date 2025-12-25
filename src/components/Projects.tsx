@@ -1,7 +1,6 @@
-// src/components/Projects.tsx
-import React, { useMemo, useState, useEffect } from "react";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-import { Github, ExternalLink, X } from "lucide-react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, LayoutGroup, useScroll, useTransform } from "framer-motion";
+import { Github, ExternalLink, X, ArrowRight, Activity, Terminal, Code } from "lucide-react";
 
 // ---------------------- Types ----------------------
 type Project = {
@@ -16,38 +15,41 @@ type Project = {
   live?: string;
   badge?: string;
   impact?: string;
+  stats?: { label: string; value: string }; 
 };
 
-// ---------------------- Badge Styling ----------------------
+// ---------------------- Badge & Legend Styling ----------------------
 const BADGE_STYLES: Record<string, string> = {
-  Completed:
-    "border-green-500/50 text-green-600 bg-green-100/50 shadow-[0_0_10px_rgba(34,197,94,0.4)] dark:border-green-400/50 dark:text-green-400 dark:bg-green-900/30 dark:shadow-[0_0_10px_rgba(34,197,94,0.5)]",
-  "🚧 In Progress":
-    "border-yellow-500/50 text-yellow-700 bg-yellow-100/50 shadow-[0_0_10px_rgba(234,179,8,0.4)] dark:border-yellow-400/50 dark:text-yellow-300 dark:bg-yellow-900/30 dark:shadow-[0_0_10px_rgba(234,179,8,0.5)]",
-  Research:
-    "border-purple-500/50 text-purple-700 bg-purple-100/50 shadow-[0_0_10px_rgba(168,85,247,0.4)] dark:border-purple-400/50 dark:text-purple-300 dark:bg-purple-900/30 dark:shadow-[0_0_10px_rgba(168,85,247,0.5)]",
-  Experimental:
-    "border-pink-500/50 text-pink-700 bg-pink-100/50 shadow-[0_0_10px_rgba(236,72,153,0.4)] dark:border-pink-400/50 dark:text-pink-300 dark:bg-pink-900/30 dark:shadow-[0_0_10px_rgba(236,72,153,0.5)]",
+  Completed: "border-green-500/50 text-green-600 dark:text-green-400 bg-green-500/10 shadow-[0_0_15px_rgba(34,197,94,0.2)]",
+  "🚧 In Progress": "border-yellow-500/50 text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 shadow-[0_0_15px_rgba(234,179,8,0.2)]",
+  Research: "border-purple-500/50 text-purple-600 dark:text-purple-400 bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.2)]",
+  Experimental: "border-pink-500/50 text-pink-600 dark:text-pink-400 bg-pink-500/10 shadow-[0_0_15px_rgba(236,72,153,0.2)]",
 };
-
-// Simplified style map for the Legend
-const BADGE_LEGEND_BASE_STYLES: Record<string, string> = {
-  Completed:
-    "border-green-500/50 text-green-600 bg-green-100/50 dark:border-green-400/50 dark:text-green-400 dark:bg-green-900/30",
-  "🚧 In Progress":
-    "border-yellow-500/50 text-yellow-700 bg-yellow-100/50 dark:border-yellow-400/50 dark:text-yellow-300 dark:bg-yellow-900/30",
-  "Research/Exp":
-    "border-purple-500/50 text-purple-700 bg-purple-100/50 dark:border-purple-400/50 dark:text-purple-300 dark:bg-purple-900/30",
-};
-
-const BADGE_LEGEND: { label: string; style: string }[] = [
-  { label: "Completed", style: BADGE_LEGEND_BASE_STYLES.Completed },
-  { label: "In Progress", style: BADGE_LEGEND_BASE_STYLES["🚧 In Progress"] },
-  { label: "Research/Exp", style: BADGE_LEGEND_BASE_STYLES["Research/Exp"] },
-];
 
 // ---------------------- Project Data ----------------------
 const PROJECTS: Project[] = [
+  {
+    id: "infosys-ai-health",
+    title: "Multi-Model AI Health Diagnostics",
+    short: "Automated interpretation of noisy medical PDFs using OCR + ML pipelines.",
+    long: `🔴 Problem\nMedical reports are unstructured, noisy and manually interpreted — time-consuming and error-prone.\n\n🟢 Why Me\nWorked directly with real hospital PDFs. Handled OCR failures, inconsistent units and missing values. Not toy datasets — real production mess.\n\n⚙️ System Design\nOCR → Cleaning → Feature Extraction\nRule-based logic + ML models\nModular pipeline (Model-1, Model-2…)`,
+    category: "AI/ML",
+    tech: ["Python", "Pandas", "TensorFlow", "OCR"],
+    badge: "Research",
+    stats: { label: "Processing Speed", value: "0.8s/Page" },
+    impact: "Demonstrates real-world ML problem solving",
+  },
+  {
+    id: "faculty-system",
+    title: "Faculty Management System (FMS)",
+    short: "Designed from real CR experience to reduce faculty workload.",
+    long: `🔴 Problem\nFaculty overloaded with attendance, marks, tracking and reports.\nFragmented tools and manual workflows.\n\n🟢 Why Me\nCR experience. Direct observation of faculty pain points. Built for real college operations — not assumptions.\n\n🧩 Core Modules\nSmart Attendance\nAssignment Tracking\nProgress Dashboard\nNotifications`,
+    category: "College Project",
+    tech: ["Flask", "SQLite", "Bootstrap"],
+    badge: "🚧 In Progress",
+    stats: { label: "Workload Reduced", value: "40%" },
+    impact: "Founder mindset + systems thinking",
+  },
   {
     id: "rythmize",
     title: "Rythmize (Tkinter Music Player)",
@@ -57,6 +59,7 @@ const PROJECTS: Project[] = [
     tech: ["Python", "Tkinter", "Audio"],
     banner: "https://via.placeholder.com/1200x600.png?text=Rythmize+Banner",
     badge: "Completed",
+    stats: { label: "Memory Usage", value: "<15MB" },
     impact: "Kickstarted my coding journey by mastering Python basics",
   },
   {
@@ -66,20 +69,10 @@ const PROJECTS: Project[] = [
     long: "Tracks student placements, company visits, status updates and offers with role-based dashboards for colleges.",
     category: "Web Dev",
     tech: ["React", "Firebase", "Tailwind CSS"],
-    banner:
-      "https://via.placeholder.com/1200x600.png?text=Placement+Tracker+Banner",
+    banner: "https://via.placeholder.com/1200x600.png?text=Placement+Tracker+Banner",
     badge: "Completed",
+    stats: { label: "Data Integrity", value: "99.9%" },
     impact: "Simplified placement tracking for 100+ students",
-  },
-  {
-    id: "faculty-system",
-    title: "Faculty Management System",
-    short: "Automates faculty workload & attendance.",
-    long: "Feature-rich system to manage attendance, allocate workload, upload marks and generate reports — built with full CRUD and dashboards.",
-    category: "College Project",
-    tech: ["Flask", "SQLite", "Bootstrap"],
-    badge: "🚧 In Progress",
-    impact: "Designed to reduce workload for 50+ faculty members",
   },
   {
     id: "smart-attendance",
@@ -89,6 +82,7 @@ const PROJECTS: Project[] = [
     category: "AI/ML",
     tech: ["React", "Node.js", "MongoDB"],
     badge: "🚧 In Progress",
+    stats: { label: "Check-in Time", value: "1.2s" },
     impact: "Boosts efficiency and transparency in student attendance",
   },
   {
@@ -100,6 +94,7 @@ const PROJECTS: Project[] = [
     tech: ["React", "Framer Motion", "Tailwind"],
     banner: "https://via.placeholder.com/1200x600.png?text=Portfolio+Banner",
     badge: "Completed",
+    stats: { label: "Performance", value: "100/100" },
     impact: "Represents my professional brand and creativity",
   },
   {
@@ -110,6 +105,7 @@ const PROJECTS: Project[] = [
     category: "AI/ML",
     tech: ["Python", "TensorFlow", "Keras"],
     badge: "Research",
+    stats: { label: "Model Type", value: "DCGAN" },
     impact: "Gained hands-on ML research experience",
   },
   {
@@ -120,65 +116,54 @@ const PROJECTS: Project[] = [
     category: "Creative",
     tech: ["Three.js", "WebGL", "React"],
     badge: "Experimental",
+    stats: { label: "FPS", value: "60.0" },
     impact: "Showcased creativity in UI/UX storytelling",
   },
 ];
 
-// ---------------------- Variants ----------------------
-const cardVariants = {
-  rest: { scale: 1 },
-  hover: { scale: 1.04 },
-};
-const bannerVariants = {
-  rest: { y: "100%" },
-  hover: { y: "0%" },
-};
-
 // ---------------------- Tech Icons ----------------------
 const TECH_ICONS: Record<string, string> = {
-  React: "⚛",
-  Python: "🐍",
-  "Node.js": "🟢",
-  MongoDB: "🍃",
-  SQLite: "🗄",
-  Flask: "🥤",
-  Firebase: "🔥",
-  "Tailwind CSS": "🌊",
-  Bootstrap: "📘",
-  Audio: "🎵",
-  Tkinter: "🖥",
-  AI: "🤖",
-  "Framer Motion": "🎞",
-  TensorFlow: "🧠",
-  Keras: "📊",
-  "OpenWeather API": "☁",
-  "Chart.js": "📈",
-  "GitHub API": "🐙",
-  "D3.js": "📊",
-  "Three.js": "🌀",
-  WebGL: "🌐",
+  React: "⚛", Python: "🐍", "Node.js": "🟢", MongoDB: "🍃", SQLite: "🗄",
+  Flask: "🥤", Firebase: "🔥", "Tailwind CSS": "🌊", Bootstrap: "📘",
+  Audio: "🎵", Tkinter: "🖥", AI: "🤖", "Framer Motion": "🎞",
+  TensorFlow: "🧠", Keras: "📊", "OpenWeather API": "☁", "Chart.js": "📈",
+  "GitHub API": "🐙", "D3.js": "📊", "Three.js": "🌀", WebGL: "🌐",
+};
+
+// ---------------------- Variants ----------------------
+const cardVariants = {
+  rest: { scale: 1, y: 0 },
+  hover: { scale: 1.02, y: -10, transition: { type: "spring", stiffness: 400, damping: 25 } }
+};
+
+const bannerVariants = {
+  rest: { opacity: 0.2, scale: 1.1 },
+  hover: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut" } }
 };
 
 // ---------------------- Component ----------------------
 const Projects: React.FC = () => {
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
+
+  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeProject, setActiveProject] = useState<Project | null>(null);
+
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(PROJECTS.map((p) => p.category)))],
     []
   );
 
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [activeProject, setActiveProject] = useState<Project | null>(null);
-
-  const filteredProjects =
-    activeCategory === "All"
+  const filteredProjects = activeCategory === "All"
       ? PROJECTS
       : PROJECTS.filter((p) => p.category === activeCategory);
 
-  // Close preview on Esc
   useEffect(() => {
-    const onEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setActiveProject(null);
-    };
+    const onEsc = (e: KeyboardEvent) => { if (e.key === "Escape") setActiveProject(null); };
     window.addEventListener("keydown", onEsc);
     return () => window.removeEventListener("keydown", onEsc);
   }, []);
@@ -186,43 +171,43 @@ const Projects: React.FC = () => {
   return (
     <section
       id="projects"
-      className="relative py-20 px-6 bg-gradient-to-br from-white via-gray-100 to-gray-200 dark:from-black dark:via-black dark:to-gray-900 transition-colors duration-700"
+      ref={containerRef}
+      className="relative py-24 px-6 overflow-hidden bg-white dark:bg-[#050505] transition-colors duration-1000"
     >
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-6">
-          <h2 className="text-4xl md:text-5xl font-extrabold">
-            <span className="text-blue-600 drop-shadow-[0_0_12px_rgba(37,99,235,0.5)] dark:text-[#00FFB3] dark:drop-shadow-[0_0_15px_#00FFB3]">
-              Projects
-            </span>
-          </h2>
+      {/* Dynamic Background Blurs */}
+      <motion.div style={{ y: bgY }} className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-500/5 dark:bg-[#00FFB3]/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-indigo-500/5 dark:bg-blue-500/5 rounded-full blur-[150px]" />
+      </motion.div>
 
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            {/* Badge Legend */}
-            <div className="hidden sm:flex items-center gap-4 text-xs font-medium text-gray-500 dark:text-gray-400">
-              {BADGE_LEGEND.map((badge) => (
-                <div key={badge.label} className="flex items-center gap-1">
-                  <span
-                    className={`h-2.5 w-2.5 rounded-full border ${badge.style}`}
-                  ></span>
-                  {badge.label}
-                </div>
-              ))}
+      <div className="max-w-7xl mx-auto relative z-10">
+        {/* Header & Legend */}
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-20 gap-8">
+          <div>
+            <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-zinc-900 dark:text-[#00FFB3] drop-shadow-sm">
+              PROJECTS
+            </h2>
+            <p className="text-zinc-500 dark:text-zinc-400 mt-4 font-mono max-w-sm uppercase tracking-widest text-[10px]">
+              System Architecture & Execution
+            </p>
+          </div>
+
+          <div className="flex flex-col items-start md:items-end gap-6">
+            <div className="flex flex-wrap items-center gap-6 text-[9px] font-black uppercase tracking-widest">
+               <div className="flex items-center gap-2 text-green-600 dark:text-green-400"><Activity size={12}/> Completed</div>
+               <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400"><Terminal size={12}/> In Progress</div>
+               <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400"><Code size={12}/> Research/Exp</div>
             </div>
 
-            {/* Category Filter */}
-            <div className="flex gap-2 p-1 rounded-full border border-black/20 bg-black/5 dark:border-[#00FFB3]/20 dark:bg-white/5 backdrop-blur-sm">
+            <div className="flex flex-wrap gap-2 p-1.5 rounded-2xl bg-zinc-100/50 dark:bg-white/5 border border-zinc-200 dark:border-white/5 backdrop-blur-xl">
               {categories.map((cat) => (
                 <button
                   key={cat}
-                  onClick={() => {
-                    setActiveCategory(cat);
-                    setActiveProject(null);
-                  }}
-                  className={`px-4 py-1 rounded-full text-sm transition-all ${
-                    activeCategory === cat
-                      ? "bg-blue-600 text-white dark:bg-[#00FFB3] dark:text-black"
-                      : "text-gray-700 hover:text-black dark:text-white/70 dark:hover:text-white"
+                  onClick={() => { setActiveCategory(cat); setActiveProject(null); }}
+                  className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                    activeCategory === cat 
+                      ? "bg-zinc-900 text-white dark:bg-[#00FFB3] dark:text-black shadow-xl" 
+                      : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
                   }`}
                 >
                   {cat}
@@ -236,75 +221,62 @@ const Projects: React.FC = () => {
         <LayoutGroup>
           <AnimatePresence mode="wait">
             {!activeProject ? (
-              <motion.div
-                key="grid"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.45 }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+              <motion.div 
+                key="grid" 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }} 
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10"
               >
                 {filteredProjects.map((proj) => (
                   <motion.div
                     key={proj.id}
                     layoutId={`card-${proj.id}`}
+                    variants={cardVariants}
                     initial="rest"
                     whileHover="hover"
                     animate="rest"
-                    variants={cardVariants}
                     onClick={() => setActiveProject(proj)}
-                    className="relative group cursor-pointer h-56 rounded-xl overflow-hidden border border-black/20 bg-gradient-to-t from-gray-200/60 via-gray-100/30 to-transparent shadow-[0_0_12px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] dark:border-[#00FFB3]/30 dark:from-black/60 dark:via-black/30 dark:to-transparent dark:shadow-[0_0_12px_#00FFB3]/30 dark:hover:shadow-[0_0_35px_#00FFB3]/70 transition-all duration-500"
+                    className="relative group cursor-pointer h-[420px] rounded-[40px] overflow-hidden border border-zinc-200 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900/40 backdrop-blur-md transition-all duration-500 flex flex-col shadow-sm hover:shadow-2xl dark:hover:shadow-[#00FFB3]/10"
                   >
-                    {/* Banner reveal */}
-                    <motion.img
-                      variants={bannerVariants}
-                      initial="rest"
-                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                      src={
-                        proj.banner ??
-                        "https://via.placeholder.com/1200x600.png?text=No+Banner"
-                      }
-                      alt={`${proj.title} banner`}
-                    />
+                    {/* Magnetic Banner Reveal (Top Path) */}
+                    <div className="h-28 relative overflow-hidden bg-zinc-100 dark:bg-zinc-950 border-b border-zinc-200 dark:border-white/5">
+                      <motion.img
+                        variants={bannerVariants}
+                        className="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                        src={proj.banner ?? `https://via.placeholder.com/800x200/ddd/888?text=SYSTEM+VISUAL`}
+                        alt=""
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-50/50 dark:from-zinc-900 to-transparent" />
+                      {proj.badge && (
+                        <div className="absolute top-4 right-4 z-20">
+                          <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest backdrop-blur-md ${BADGE_STYLES[proj.badge]}`}>
+                            {proj.badge}
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-                    <div className="absolute inset-0 bg-white/60 dark:bg-black/60 backdrop-blur-sm" />
-
-                    {proj.badge && (
-                      <div className="absolute top-3 right-3 z-20">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wider backdrop-blur-md ${
-                            BADGE_STYLES[proj.badge] ??
-                            "border border-blue-600/50 text-blue-600 bg-white/40"
-                          }`}
-                        >
-                          {proj.badge}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="relative z-30 h-full p-6 flex flex-col justify-between">
+                    <div className="p-10 flex flex-col justify-between flex-grow relative z-30">
                       <div>
-                        <h3 className="text-lg font-bold leading-tight text-black group-hover:text-blue-600 dark:text-white dark:group-hover:text-[#00FFB3] transition-colors">
+                        <h3 className="text-xl font-black text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-[#00FFB3] transition-colors tracking-tight">
                           {proj.title}
                         </h3>
-                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 line-clamp-3">
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-4 line-clamp-3 leading-relaxed font-medium">
                           {proj.short}
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between mt-3">
-                        <div className="flex gap-2">
+                      <div className="flex items-center justify-between pt-8 border-t border-zinc-100 dark:border-white/5">
+                        <div className="flex -space-x-2">
                           {proj.tech.slice(0, 3).map((t) => (
-                            <span
-                              key={t}
-                              className="text-xs px-2 py-1 rounded-full bg-black/5 text-gray-800 dark:bg-white/10 dark:text-gray-200 flex items-center gap-1"
-                            >
-                              {TECH_ICONS[t] ?? "🔧"} {t}
-                            </span>
+                            <div key={t} className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 border-2 border-zinc-50 dark:border-zinc-950 flex items-center justify-center text-xs shadow-sm" title={t}>
+                              {TECH_ICONS[t] ?? "🔧"}
+                            </div>
                           ))}
                         </div>
-                        <div className="text-gray-500 dark:text-white/40 text-xs">
-                          View →
+                        <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-[#00FFB3] transition-colors">
+                          Deploy <ArrowRight size={14} />
                         </div>
                       </div>
                     </div>
@@ -312,145 +284,103 @@ const Projects: React.FC = () => {
                 ))}
               </motion.div>
             ) : (
-              <motion.div
-                key="preview"
-                layout
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+              <motion.div 
+                key="preview" 
+                layout 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+                className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[600px]"
               >
-                {/* Left: details */}
+                {/* Left Side: Staggered Content Reveal */}
                 <motion.div
                   layoutId={`card-${activeProject.id}`}
-                  className="rounded-xl p-8 bg-white/80 border border-black/20 shadow-[0_0_15px_rgba(37,99,235,0.3)] dark:bg-white/5 dark:border-[#00FFB3]/30 dark:shadow-[0_0_20px_#00FFB3]/40 flex flex-col justify-between"
+                  className="rounded-[48px] p-12 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-[#00FFB3]/20 shadow-2xl flex flex-col justify-between"
                 >
-                  <div>
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h2 className="text-3xl font-bold text-black dark:text-white">
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      hidden: { opacity: 0 },
+                      visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+                    }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <motion.div variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}>
+                        <h2 className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter uppercase">
                           {activeProject.title}
                         </h2>
-                        <p className="text-blue-600 dark:text-[#00FFB3] mt-2">
-                          {activeProject.short}
-                        </p>
-                      </div>
-                      <div className="flex items-start gap-2">
+                        <span className="text-blue-600 dark:text-[#00FFB3] font-mono text-[10px] font-bold uppercase tracking-[0.3em]">
+                          {activeProject.category}
+                        </span>
+                      </motion.div>
+                      
+                      <div className="flex gap-4">
                         {activeProject.github && (
-                          <a
-                            href={activeProject.github}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-gray-700 hover:text-blue-600 dark:text-white/80 dark:hover:text-[#00FFB3]"
-                          >
-                            <Github size={18} />
-                          </a>
+                          <motion.a whileHover={{ y: -3 }} href={activeProject.github} target="_blank" className="p-4 rounded-2xl bg-zinc-100 dark:bg-white/5 text-zinc-900 dark:text-white hover:bg-zinc-900 hover:text-white dark:hover:bg-[#00FFB3] dark:hover:text-black transition-all shadow-sm">
+                            <Github size={20} />
+                          </motion.a>
                         )}
-                        {activeProject.live && (
-                          <a
-                            href={activeProject.live}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-gray-700 hover:text-blue-600 dark:text-white/80 dark:hover:text-[#00FFB3]"
-                          >
-                            <ExternalLink size={18} />
-                          </a>
-                        )}
+                        <motion.button 
+                          whileHover={{ scale: 1.1, rotate: 90 }} 
+                          onClick={() => setActiveProject(null)} 
+                          className="p-4 rounded-2xl bg-zinc-100 dark:bg-white/5 text-zinc-900 dark:text-white hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                        >
+                          <X size={20} />
+                        </motion.button>
                       </div>
                     </div>
 
-                    {activeProject.badge && (
-                      <div className="mt-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wider ${
-                            BADGE_STYLES[activeProject.badge] ??
-                            "border border-blue-600/50 text-blue-600 bg-white/40"
-                          }`}
-                        >
-                          {activeProject.badge}
-                        </span>
-                      </div>
-                    )}
-
-                    {activeProject.long && (
-                      <p className="text-gray-700 dark:text-gray-300 mt-6 leading-relaxed">
+                    <div className="mt-12 space-y-8">
+                      {activeProject.stats && (
+                        <motion.div variants={{ hidden: { scale: 0.9, opacity: 0 }, visible: { scale: 1, opacity: 1 } }} className="p-6 rounded-3xl bg-zinc-50 dark:bg-[#00FFB3]/5 border border-zinc-100 dark:border-[#00FFB3]/10">
+                          <span className="text-[9px] font-black uppercase text-zinc-400 dark:text-[#00FFB3] tracking-widest">{activeProject.stats.label}</span>
+                          <div className="text-3xl font-black text-zinc-900 dark:text-white leading-none mt-2">{activeProject.stats.value}</div>
+                        </motion.div>
+                      )}
+                      <motion.p variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }} className="text-zinc-600 dark:text-zinc-400 text-sm leading-loose whitespace-pre-line font-medium">
                         {activeProject.long}
-                      </p>
-                    )}
-
-                    {activeProject.impact && (
-                      <p className="mt-4 text-blue-600 dark:text-[#00FFB3] italic font-medium">
-                        Impact: {activeProject.impact}
-                      </p>
-                    )}
-
-                    <div className="flex flex-wrap gap-2 mt-6">
-                      {activeProject.tech.map((t) => (
-                        <span
-                          key={t}
-                          className="px-3 py-1 rounded-full bg-black/5 text-sm text-gray-800 dark:bg-white/10 dark:text-gray-200 flex items-center gap-1"
-                        >
-                          {TECH_ICONS[t] ?? "🔧"} {t}
-                        </span>
-                      ))}
+                      </motion.p>
+                      {activeProject.impact && (
+                        <motion.div variants={{ hidden: { x: -20, opacity: 0 }, visible: { x: 0, opacity: 1 } }} className="mt-10 p-6 rounded-2xl bg-blue-500/5 border border-blue-500/20">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 block mb-2">Architectural Impact</span>
+                          <p className="text-blue-100 font-bold">{activeProject.impact}</p>
+                        </motion.div>
+                      )}
                     </div>
-                  </div>
+                  </motion.div>
 
-                  <div className="mt-6 flex gap-3">
-                    {activeProject.github && (
-                      <a
-                        href={activeProject.github}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-4 py-2 rounded-full border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition dark:border-[#00FFB3] dark:text-[#00FFB3] dark:hover:bg-[#00FFB3] dark:hover:text-black"
-                      >
-                      <Github size={16} className="inline mr-2" /> View Code
-                      </a>
-                    )}
-
-                    {activeProject.live ? (
-                      <a
-                        href={activeProject.live}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-4 py-2 rounded-full border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition dark:border-[#00FFB3] dark:text-[#00FFB3] dark:hover:bg-[#00FFB3] dark:hover:text-black"
-                      >
-                        <ExternalLink size={16} className="inline mr-2" />
-                        Live Demo
-                      </a>
-                    ) : (
-                      <span className="px-4 py-2 rounded-full bg-black/5 text-gray-600 dark:bg-white/5 dark:text-gray-400 cursor-not-allowed">
-                        <ExternalLink size={16} className="inline mr-2" /> No
-                        Live Demo
+                  <div className="mt-12 flex flex-wrap gap-2 pt-8 border-t border-zinc-100 dark:border-white/5">
+                    {activeProject.tech.map((t) => (
+                      <span key={t} className="px-5 py-2 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 text-[10px] font-black uppercase text-zinc-500 dark:text-zinc-300 tracking-wider">
+                        {TECH_ICONS[t] ?? "🔧"} {t}
                       </span>
-                    )}
+                    ))}
                   </div>
                 </motion.div>
 
-                {/* Right: Banner and Close Button */}
+                {/* Right Side: Square System Preview */}
                 <motion.div
-                  key="preview-right"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="relative rounded-xl overflow-hidden h-72 lg:h-auto"
+                  className="relative rounded-[48px] overflow-hidden bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-white/5 flex items-center justify-center group shadow-inner"
                 >
-                  <img
-                    src={
-                      activeProject.banner ??
-                      "https://via.placeholder.com/1200x600.png?text=No+Banner"
-                    }
-                    alt={`${activeProject.title} banner`}
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    onClick={() => setActiveProject(null)}
-                    className="absolute top-4 right-4 p-2 rounded-full bg-white/30 hover:bg-white/50 backdrop-blur-sm text-black dark:bg-black/30 dark:hover:bg-black/50 dark:text-white transition-colors"
-                    aria-label="Close project preview"
-                  >
-                    <X size={24} />
-                  </button>
+                  {activeProject.live ? (
+                    <iframe src={activeProject.live} className="w-full h-full border-none opacity-90" title="demo" />
+                  ) : (
+                    <div className="text-center p-16">
+                      <div className="w-24 h-24 bg-zinc-200 dark:bg-[#00FFB3]/10 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse border border-zinc-300 dark:border-[#00FFB3]/30">
+                        <Terminal className="text-zinc-400 dark:text-[#00FFB3]" size={40} />
+                      </div>
+                      <h3 className="text-zinc-900 dark:text-white font-black text-2xl mb-4 tracking-tighter uppercase">PREVIEW_NOT_LOADED</h3>
+                      <p className="text-[#00FFB3] font-mono text-[10px] font-bold uppercase tracking-[0.3em] animate-bounce">
+                        You’re early 😉 Full version coming soon.
+                      </p>
+                    </div>
+                  )}
+                  {/* Decorative Overlay */}
+                  <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[length:100%_2px,3px_100%] opacity-20" />
                 </motion.div>
               </motion.div>
             )}

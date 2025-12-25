@@ -8,7 +8,8 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider attribute="class" defaultTheme="dark">
+    {/* attribute="class" is vital for the dark mode glassmorphism in Projects/Skills */}
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <BrowserRouter>
         <App />
       </BrowserRouter>

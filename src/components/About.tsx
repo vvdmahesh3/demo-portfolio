@@ -1,156 +1,176 @@
 // src/components/About.tsx
-import React, { Suspense } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
-import { Play } from "lucide-react";
-import MusicPlayer from "./MusicPlayer";
+import React, { useRef } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { Sparkles, MoveRight, Quote, Zap, ShieldCheck, Target } from "lucide-react";
 import AboutHero from "../assets/about-hero.webp";
 
-// Optional floating lights for 3D motion
-const FloatingLights = () => (
-  <>
-    <ambientLight intensity={0.4} />
-    <pointLight position={[2, 2, 3]} intensity={2} color="#00ffb3" />
-    <pointLight position={[-2, -2, 1]} intensity={1.5} color="#ff0080" />
-  </>
-);
-
 const About: React.FC = () => {
-  const { scrollYProgress } = useScroll();
+  const containerRef = useRef(null);
 
-  const scale = useTransform(scrollYProgress, [0, 0.3], [1.2, 1]);
-  const opacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
+  // High-performance scroll tracking
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"],
+  });
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
+  // Sophisticated Parallax
+  const heroScale = useTransform(smoothProgress, [0, 0.3], [1.1, 1]);
+  const heroX = useTransform(smoothProgress, [0, 0.3], ["0%", "5%"]);
+  const contentY = useTransform(smoothProgress, [0, 0.4], [50, -50]);
+  
+  // FIX: Adjusted opacity ranges so the quote stays visible longer
+  const quoteOpacity = useTransform(smoothProgress, [0.7, 0.85], [0, 1]);
+  const quoteScale = useTransform(smoothProgress, [0.7, 0.9], [0.9, 1]);
 
   return (
     <section
+      ref={containerRef}
       id="about"
-      className="relative h-[200vh] overflow-hidden text-white dark:text-gray-100"
+      className="relative min-h-[350vh] bg-white dark:bg-[#050505] text-zinc-900 dark:text-zinc-100 transition-colors duration-700"
     >
-      {/* Sticky cinematic background */}
-      <div className="sticky top-0 h-screen overflow-hidden">
-        <motion.img
-          src={AboutHero}
-          alt="Cinematic background"
-          style={{ scale, opacity }}
-          transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
-          className="absolute inset-0 w-full h-full object-cover brightness-[0.85]"
-        />
-
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,138,64,0.25)_0%,rgba(0,0,0,0.85)_100%)]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black/95" />
-
-        {/* Safe 3D Canvas */}
-        <div className="absolute inset-0 z-0">
-          <Canvas camera={{ position: [0, 0, 5] }}>
-            <Suspense fallback={null}>
-              <FloatingLights />
-              <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={1.2} />
-            </Suspense>
-          </Canvas>
-        </div>
-
-        {/* Foreground cinematic text */}
-        <div className="relative z-10 flex flex-col justify-center items-center text-center h-full px-6">
-          <motion.h2
-            initial={{ opacity: 0, y: 60 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            className="text-5xl md:text-7xl font-extrabold mb-6 
-                       bg-gradient-to-r from-[#00FFB3] to-cyan-400 bg-clip-text text-transparent 
-                       drop-shadow-[0_0_25px_rgba(0,255,179,0.4)]"
-          >
-            About Me
-          </motion.h2>
-
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.3 }}
-            className="max-w-3xl text-lg md:text-xl font-light text-gray-300 leading-relaxed"
-          >
-            Today, I stand where <span className="text-[#00FFB3] font-medium">AI</span> fuses with
-            design, where logic feels, and failures transform into new beginnings.
-            I build not for show, but for <span className="text-[#00FFB3] font-medium">impact</span>.
-          </motion.p>
-
-          <motion.div
-            initial={{ width: 0 }}
-            whileInView={{ width: "6rem" }}
-            transition={{ duration: 1, delay: 0.7 }}
-            className="h-[2px] my-8 bg-gradient-to-r from-transparent via-[#00FFB3] to-transparent"
+      {/* 1. CINEMATIC HERO STAGE (OFFSET LAYOUT) */}
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col lg:flex-row">
+        
+        {/* RIGHT PANEL: IMAGE */}
+        <motion.div 
+          style={{ scale: heroScale, x: heroX }}
+          className="relative h-[50vh] lg:h-full lg:w-1/2 overflow-hidden order-1 lg:order-2"
+        >
+          <img
+            src={AboutHero}
+            alt="VVD Mahesh"
+            className="w-full h-full object-cover brightness-[0.9] dark:brightness-[0.5] contrast-[1.1]"
           />
+          <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-white dark:from-[#050505] via-transparent to-transparent" />
+        </motion.div>
 
-          <motion.blockquote
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, delay: 1 }}
-            className="text-2xl md:text-4xl font-light leading-relaxed max-w-5xl mx-auto 
-                       text-gray-100 italic tracking-wide"
-          >
-            “This isn’t just a portfolio. It’s a reflection of grit — where{" "}
-            <span className="text-[#00FFB3] font-medium">backlogs</span> became{" "}
-            <span className="text-[#00FFB3] font-medium">breakthroughs</span>, doubts became designs,
-            and silence found <span className="text-[#00FFB3] font-medium">purpose</span>.”
-          </motion.blockquote>
-
-          <motion.h3
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.5, delay: 1.3 }}
-            className="mt-10 text-3xl md:text-4xl text-[#00FFB3] font-signature drop-shadow-[0_0_25px_#00FFB3]"
-            style={{ fontFamily: "'Great Vibes', cursive" }}
-          >
-            – V V D Mahesh
-          </motion.h3>
-
+        {/* LEFT PANEL: CORE IDENTITY */}
+        <div className="flex-1 flex flex-col justify-center px-8 lg:px-20 z-10 order-2 lg:order-1">
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ delay: 1.8, duration: 1 }}
-            className="mt-10 flex items-center gap-3 text-sm text-gray-400"
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <Play className="w-4 h-4 text-[#00FFB3]" />
-            <span>
-              Now Playing: <span className="text-[#00FFB3]">Aakaasam Nee Haddhu Ra</span>
-            </span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-100 dark:border-[#00FFB3]/20 bg-blue-50 dark:bg-[#00FFB3]/5 text-blue-600 dark:text-[#00FFB3] text-[10px] font-black uppercase tracking-[0.3em] mb-8">
+              <Sparkles size={12} /> The Architect of Grit
+            </div>
+            
+            <h2 className="text-6xl lg:text-8xl font-black tracking-tighter uppercase mb-6 leading-[0.9]">
+              SYSTEMS <br /> 
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-[#00FFB3] dark:to-cyan-400">
+                DRIVEN BY <br /> RESILIENCE.
+              </span>
+            </h2>
+            
+            <p className="max-w-md text-zinc-500 dark:text-zinc-400 font-medium text-lg leading-relaxed italic border-l-2 border-zinc-200 dark:border-zinc-800 pl-6">
+              "Failures are just unoptimized code. I've spent my journey debugging backlogs into breakthroughs."
+            </p>
           </motion.div>
         </div>
       </div>
 
-      {/* Journey section */}
-      <div className="relative z-20 bg-black py-24 px-6 md:px-20 text-gray-300 dark:text-gray-200 space-y-12">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          className="max-w-5xl mx-auto text-center"
-        >
-          <h4 className="text-3xl md:text-4xl font-semibold mb-6 text-[#00FFB3]">
-            My Journey
-          </h4>
-          <p className="text-lg md:text-xl leading-relaxed">
-            From carrying four backlogs to building a{" "}
-            <span className="text-[#00FFB3] font-medium">Faculty Management System</span> and
-            developing experiences that fuse{" "}
-            <span className="text-[#00FFB3] font-medium">AI with Design</span> — every failure shaped
-            a skill, every challenge built a story. My work reflects not just logic and design, but{" "}
-            <span className="italic">resilience and reinvention</span>.
-          </p>
-        </motion.div>
+      {/* 2. THE GRID NARRATIVE */}
+      <div className="relative z-20 container mx-auto px-6 py-40">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          
+          {/* STATS COLUMN */}
+          <motion.div 
+            style={{ y: contentY }}
+            className="lg:col-span-4 space-y-8"
+          >
+            <FeatureCard 
+              icon={<Zap className="text-orange-500" />}
+              title="Execution Speed"
+              desc="Transforming complex problems into scalable architectures with precision."
+            />
+            <FeatureCard 
+              icon={<ShieldCheck className="text-blue-500" />}
+              title="System Integrity"
+              desc="Building robust management tools that automate thousands of manual tasks."
+            />
+            <FeatureCard 
+              icon={<Target className="text-[#00FFB3]" />}
+              title="Strategic ML"
+              desc="Fusing OCR and Machine Learning for real-world diagnostics."
+            />
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.3 }}
-          className="max-w-2xl mx-auto pt-10"
+          {/* MAIN NARRATIVE CONTENT */}
+          <div className="lg:col-span-8 lg:pl-12 space-y-16">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <h3 className="text-3xl lg:text-5xl font-black uppercase tracking-tighter mb-8 dark:text-white">
+                From 4 Backlogs to <br /> 
+                <span className="text-blue-600 dark:text-[#00FFB3]">Industry-Ready Solutions.</span>
+              </h3>
+              
+              <div className="columns-1 md:columns-2 gap-10 space-y-8 text-zinc-600 dark:text-zinc-400 leading-loose text-lg font-medium">
+                <p>
+                  Most people hide their scars. I highlight mine. Carrying four backlogs wasn't a stop sign—it was the <span className="text-zinc-900 dark:text-white underline decoration-blue-500 dark:decoration-[#00FFB3] underline-offset-4">curriculum of my endurance</span>. It stripped away arrogance and replaced it with a relentless hunger to master the machine.
+                </p>
+                
+                <p>
+                  I realized that code is easy, but <span className="text-zinc-900 dark:text-white font-bold italic">resilience is rare</span>. I rebuilt my foundation, not just to pass, but to excel. Today, that grit powers the Faculty Management Systems I build and the AI pipelines I design.
+                </p>
+
+                <p className="p-8 rounded-3xl bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/5 italic">
+                  Every project is a testament to the fact that <span className="text-blue-600 dark:text-[#00FFB3]">start lines don't define finish lines.</span>
+                </p>
+              </div>
+
+              <div className="mt-12 flex flex-wrap gap-6 items-center">
+                <button className="px-8 py-4 rounded-2xl bg-zinc-900 text-white dark:bg-[#00FFB3] dark:text-black font-black uppercase tracking-widest text-xs flex items-center gap-3 hover:scale-105 transition-transform shadow-2xl">
+                  Explore Architecture <MoveRight size={16} />
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. FINAL ELEVATION QUOTE - STICKY MOMENT */}
+      <div className="h-screen sticky top-0 flex items-center justify-center overflow-hidden">
+        <motion.div 
+          style={{ opacity: quoteOpacity, scale: quoteScale }}
+          className="text-center px-6 max-w-5xl"
         >
-          <MusicPlayer />
+          <Quote className="w-12 h-12 mx-auto mb-8 text-blue-600 dark:text-[#00FFB3] opacity-50" />
+          <h2 className="text-4xl lg:text-7xl font-black tracking-tight leading-tight dark:text-white mb-10">
+            “THE DIFFERENCE BETWEEN A STUMBLING BLOCK AND A STEPPING STONE IS HOW YOU USE IT.”
+          </h2>
+          <div className="h-1 w-24 bg-blue-600 dark:bg-[#00FFB3] mx-auto rounded-full shadow-[0_0_20px_#00FFB3]" />
+          
+          <div className="mt-20 font-mono text-[10px] uppercase tracking-[0.5em] text-zinc-400 animate-pulse">
+            Scroll to continue
+          </div>
         </motion.div>
       </div>
     </section>
   );
 };
+
+const FeatureCard = ({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) => (
+  <motion.div 
+    whileHover={{ x: 10 }}
+    className="p-8 rounded-[32px] bg-white dark:bg-zinc-900/40 border border-zinc-100 dark:border-white/5 shadow-xl transition-all group"
+  >
+    <div className="mb-6 p-3 w-fit rounded-2xl bg-zinc-50 dark:bg-zinc-800/50">
+      {icon}
+    </div>
+    <h4 className="text-xl font-bold mb-3 dark:text-white group-hover:text-blue-600 dark:group-hover:text-[#00FFB3] transition-colors uppercase tracking-tighter">{title}</h4>
+    <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium">
+      {desc}
+    </p>
+  </motion.div>
+);
 
 export default About;
