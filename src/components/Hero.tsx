@@ -44,9 +44,7 @@ export default function Hero() {
             {/* The Floating Label - Offset to the right of the ripples */}
             <div className="ml-10 flex items-center gap-2 bg-black/90 dark:bg-green-500/15 border border-white/10 dark:border-green-500/30 px-3 py-1.5 rounded-full backdrop-blur-md animate-in fade-in slide-in-from-left-4 duration-1000 shadow-2xl">
               <MousePointerClick className="w-3.5 h-3.5 text-green-400" />
-              <span className="text-[10px] uppercase tracking-[0.2em] text-white dark:text-green-400 font-bold font-mono">
-                System Interface
-              </span>
+              
             </div>
           </div>
         )}
