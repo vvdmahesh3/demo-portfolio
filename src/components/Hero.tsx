@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ProximityText from "./ProximityText";
-import { Github, Linkedin, Mail, MousePointerClick } from "lucide-react";
+import { Github, Linkedin, Mail, MousePointer2 } from "lucide-react";
 import WithText from "./WithText";
 
 export default function Hero() {
@@ -8,13 +8,9 @@ export default function Hero() {
   const [showHint, setShowHint] = useState(false);
 
   useEffect(() => {
-    // 1. Show the "M" hint shortly after load
+    // Show hint after 1.5s, hide after 8s
     const hintTimer = setTimeout(() => setShowHint(true), 1500);
-    
-    // 2. Hide the hint after 6 seconds so it doesn't stay forever
-    const hideHintTimer = setTimeout(() => setShowHint(false), 7500);
-
-    // 3. Show the bottom scroll icon
+    const hideHintTimer = setTimeout(() => setShowHint(false), 8000);
     const scrollTimer = setTimeout(() => setShowScrollIcon(true), 3000);
 
     return () => {
@@ -32,19 +28,20 @@ export default function Hero() {
       id="home"
       className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden px-4 text-center bg-white dark:bg-black transition-colors duration-700"
     >
-      {/* --- SECRET INTERFACE INDICATOR (Top Left) --- */}
-      {/* Alignment tuned to match the "M" logo position in your screenshot */}
-      <div className="absolute top-[2rem] left-[2.2rem] z-50 pointer-events-none">
+      {/* --- REFINED LOGO HINT --- */}
+      {/* This container sits exactly over your Nav Logo area */}
+      <div className="absolute top-6 left-10 z-50 pointer-events-none">
         {showHint && (
-          <div className="relative flex items-center">
-            {/* Centered Sonar Ripples - Centered exactly on the Logo path */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-green-500 animate-sonar" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-green-500 animate-sonar [animation-delay:0.5s]" />
+          <div className="flex flex-col items-center gap-2">
+            {/* The Invisible Glow Trigger (Sits behind your actual logo) */}
+            <div className="w-10 h-10 rounded-lg animate-aura bg-green-500/5 border border-green-500/20" />
             
-            {/* The Floating Label - Offset to the right of the ripples */}
-            <div className="ml-10 flex items-center gap-2 bg-black/90 dark:bg-green-500/15 border border-white/10 dark:border-green-500/30 px-3 py-1.5 rounded-full backdrop-blur-md animate-in fade-in slide-in-from-left-4 duration-1000 shadow-2xl">
-              <MousePointerClick className="w-3.5 h-3.5 text-green-400" />
-              
+            {/* The Minimalist Tooltip */}
+            <div className="flex items-center gap-2 bg-black/90 dark:bg-zinc-900 border border-white/10 dark:border-green-500/30 px-3 py-1 rounded-md backdrop-blur-md animate-in fade-in zoom-in duration-700 shadow-2xl">
+              <MousePointer2 className="w-3 h-3 text-green-400" />
+              <span className="text-[9px] uppercase tracking-[0.2em] text-green-400 font-bold">
+                Click Logo to Initialize
+              </span>
             </div>
           </div>
         )}

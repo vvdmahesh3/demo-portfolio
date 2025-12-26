@@ -824,3 +824,13 @@ html.lenis {
 .animate-sonar {
   animation: sonar-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
+
+@keyframes logo-aura {
+  0% { box-shadow: 0 0 0px 0px rgba(0, 255, 179, 0); }
+  50% { box-shadow: 0 0 20px 5px rgba(0, 255, 179, 0.3); }
+  100% { box-shadow: 0 0 0px 0px rgba(0, 255, 179, 0); }
+}
+
+.animate-aura {
+  animation: logo-aura 2s ease-in-out infinite;
+}
