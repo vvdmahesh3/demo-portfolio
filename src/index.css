@@ -875,3 +875,32 @@ html.lenis {
 /* Custom Scrollbar */
 .terminal-scroll::-webkit-scrollbar { width: 3px; }
 .terminal-scroll::-webkit-scrollbar-thumb { background: #00FFB3; box-shadow: 0 0 10px #00FFB3; }
+/* Custom Cinematic Scrollbar for Music Results */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 255, 179, 0.02);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #00FFB3;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 255, 179, 0.5);
+}
+
+/* System "Hit" effect for transitions */
+@keyframes chromatic-hit {
+  0% { filter: none; transform: scale(1); }
+  10% { filter: drop-shadow(2px 0 red) drop-shadow(-2px 0 blue); transform: scale(1.01); }
+  100% { filter: none; transform: scale(1); }
+}
+.animate-hit {
+  animation: chromatic-hit 0.4s ease-out;
+}
+
+/* Neural Aura Breathing */
+@keyframes system-idle {
+  0%, 100% { opacity: 0.3; filter: blur(80px); transform: scale(1); }
+  50% { opacity: 0.5; filter: blur(100px); transform: scale(1.05); }
+}
+.animate-system-idle { animation: system-idle 8s ease-in-out infinite; }

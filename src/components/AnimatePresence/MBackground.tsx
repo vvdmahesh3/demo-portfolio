@@ -196,7 +196,7 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
       <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-40 pointer-events-none" />
       <div id="yt-player-instance" className="absolute invisible" />
 
-      {/* --- HUD HEADER --- */}
+      {/* --- HUD HEADER (Concept 1 & 9) --- */}
       <div className="absolute top-0 left-0 w-full p-10 flex justify-between items-start pointer-events-none z-[210]">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 text-[#00FFB3] text-[10px] font-black uppercase tracking-[0.4em]">
@@ -219,7 +219,7 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
         </div>
       </div>
 
-      {/* --- CENTERED IDENTITY (CINEMATIC TILT) --- */}
+      {/* --- CENTERED IDENTITY (Concept 7: Cinematic Tilt) --- */}
       <div className="relative z-10 text-center pointer-events-none select-none">
         <motion.div 
            style={{ 
@@ -241,7 +241,7 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
         </motion.div>
       </div>
 
-      {/* --- DEVELOPER DATA OVERLAY --- */}
+      {/* --- PLAYGROUND DATA (Concept 8) --- */}
       <AnimatePresence>
         {isDevMode && (
           <motion.div 
@@ -258,11 +258,11 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
         )}
       </AnimatePresence>
 
-      {/* --- HUD PLAYER DOCK --- */}
+      {/* --- HUD PLAYER DOCK (Concept 4 & 5) --- */}
       <div className="absolute bottom-12 w-full max-w-5xl px-8 z-50">
         <div className="h-28 rounded-[35px] bg-black/40 backdrop-blur-3xl border border-white/10 shadow-[0_30px_100px_rgba(0,0,0,0.9)] flex items-center justify-between px-10 relative overflow-hidden group hover:border-[#00FFB3]/30 transition-all duration-500">
           
-          {/* Top Edge Visualizer */}
+          {/* Top Edge Frequency Visualizer */}
           <div className="absolute top-0 left-0 w-full flex items-end gap-[2px] h-[3px]">
              {[...Array(60)].map((_, i) => (
                <motion.div 
@@ -273,7 +273,7 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
              ))}
           </div>
 
-          {/* Left: Metadata */}
+          {/* Metadata */}
           <div className="flex items-center gap-6 min-w-[320px]">
             {currentSong ? (
               <div className="flex items-center gap-5">
@@ -298,7 +298,7 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
             )}
           </div>
 
-          {/* Center: Controls */}
+          {/* Controls */}
           <div className="flex items-center gap-10">
             <button onClick={() => playerRef.current?.seekTo(playerRef.current.getCurrentTime() - 10)} className="text-white/10 hover:text-white transition-colors"><SkipBack size={26} /></button>
             <motion.button 
@@ -312,7 +312,7 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
             <button onClick={() => playerRef.current?.seekTo(playerRef.current.getCurrentTime() + 10)} className="text-white/10 hover:text-white transition-colors"><SkipForward size={26} /></button>
           </div>
 
-          {/* Right: Tools */}
+          {/* Tools */}
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-4 bg-white/5 px-5 py-2.5 rounded-full border border-white/5">
                <Volume2 size={16} className="text-[#00FFB3]" />
@@ -325,7 +325,7 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
         </div>
       </div>
 
-      {/* --- DASHBOARD SEARCH OVERLAY --- */}
+      {/* --- DASHBOARD SEARCH OVERLAY (With Cinematic Scroll) --- */}
       <AnimatePresence>
         {searchOpen && (
           <motion.div 
@@ -381,7 +381,7 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
                   ))
                 ) : (
                   <div className="text-center py-24 text-white/5 text-[11px] font-black uppercase tracking-[1.5em] italic">
-                    {loading ? "SEARCHING_DATA_..." : "AWAITING_INPUT"}
+                    {loading ? "SEARCHING_DATA_..." : "AWAITING_SIGNAL"}
                   </div>
                 )}
               </div>
