@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, Search, X, 
-  Loader2, Music, Sparkles, ChevronRight, Disc
+  Loader2, Music, Sparkles, ChevronRight, Disc, Activity
 } from "lucide-react";
 
 interface LabProps { onClose: () => void; }
