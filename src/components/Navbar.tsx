@@ -96,7 +96,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMClick }) => {
                   <div className="absolute top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/90 dark:bg-zinc-900 border border-[#00FFB3]/30 px-3 py-1 rounded-full backdrop-blur-md shadow-2xl min-w-max">
                     <MousePointer2 className="w-3 h-3 text-[#00FFB3]" />
                     <span className="text-[8px] uppercase tracking-[0.2em] text-[#00FFB3] font-bold">
-                      Initialize System
+                      Click to Enter!
                     </span>
                   </div>
                 </motion.div>
