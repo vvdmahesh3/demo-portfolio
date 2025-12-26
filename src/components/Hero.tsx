@@ -28,19 +28,19 @@ export default function Hero() {
       id="home"
       className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden px-4 text-center bg-white dark:bg-black transition-colors duration-700"
     >
-      {/* --- REFINED LOGO HINT --- */}
-      {/* This container sits exactly over your Nav Logo area */}
-      <div className="absolute top-6 left-10 z-50 pointer-events-none">
+      {/* --- PIXEL-PERFECT LOGO HINT --- */}
+      {/* Adjusted top and left to perfectly center on the "M" logo */}
+      <div className="absolute top-5 left-8 z-50 pointer-events-none">
         {showHint && (
-          <div className="flex flex-col items-center gap-2">
-            {/* The Invisible Glow Trigger (Sits behind your actual logo) */}
-            <div className="w-10 h-10 rounded-lg animate-aura bg-green-500/5 border border-green-500/20" />
+          <div className="flex flex-col items-center gap-1.5">
+            {/* The Aura Glow - perfectly sized to the logo square */}
+            <div className="w-11 h-11 rounded-xl animate-aura bg-green-500/5 border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]" />
             
-            {/* The Minimalist Tooltip */}
-            <div className="flex items-center gap-2 bg-black/90 dark:bg-zinc-900 border border-white/10 dark:border-green-500/30 px-3 py-1 rounded-md backdrop-blur-md animate-in fade-in zoom-in duration-700 shadow-2xl">
-              <MousePointer2 className="w-3 h-3 text-green-400" />
-              <span className="text-[6px] uppercase tracking-[0.2em] text-green-400 font-bold">
-                Click Logo to Initialize
+            {/* The Minimalist Tooltip - cleaned up width and padding */}
+            <div className="flex items-center gap-2 bg-black/90 dark:bg-zinc-900 border border-white/10 dark:border-green-500/30 px-2.5 py-1 rounded-full backdrop-blur-md animate-in fade-in zoom-in slide-in-from-top-1 duration-700 shadow-2xl">
+              <MousePointer2 className="w-2.5 h-2.5 text-green-400" />
+              <span className="text-[7px] uppercase tracking-[0.15em] text-green-400 font-bold whitespace-nowrap">
+                Initialize System
               </span>
             </div>
           </div>
