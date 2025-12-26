@@ -33,17 +33,18 @@ export default function Hero() {
       className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden px-4 text-center bg-white dark:bg-black transition-colors duration-700"
     >
       {/* --- SECRET INTERFACE INDICATOR (Top Left) --- */}
-      <div className="absolute top-8 left-8 z-50 pointer-events-none">
+      {/* Alignment tuned to match the "M" logo position in your screenshot */}
+      <div className="absolute top-[2rem] left-[2.2rem] z-50 pointer-events-none">
         {showHint && (
           <div className="relative flex items-center">
-            {/* The Sonar Ripples around the "M" area */}
-            <div className="absolute -left-2 w-10 h-10 rounded-full border border-green-500 animate-sonar" />
-            <div className="absolute -left-2 w-10 h-10 rounded-full border border-green-500 animate-sonar [animation-delay:0.5s]" />
+            {/* Centered Sonar Ripples - Centered exactly on the Logo path */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-green-500 animate-sonar" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-green-500 animate-sonar [animation-delay:0.5s]" />
             
-            {/* The Floating Label */}
-            <div className="ml-12 flex items-center gap-2 bg-black/50 dark:bg-green-500/10 border border-black/10 dark:border-green-500/20 px-3 py-1.5 rounded-full backdrop-blur-md animate-in fade-in slide-in-from-left-4 duration-1000">
-              <MousePointerClick className="w-3.5 h-3.5 text-black dark:text-green-400" />
-              <span className="text-[10px] uppercase tracking-[0.2em] text-black dark:text-green-400 font-bold font-mono">
+            {/* The Floating Label - Offset to the right of the ripples */}
+            <div className="ml-10 flex items-center gap-2 bg-black/90 dark:bg-green-500/15 border border-white/10 dark:border-green-500/30 px-3 py-1.5 rounded-full backdrop-blur-md animate-in fade-in slide-in-from-left-4 duration-1000 shadow-2xl">
+              <MousePointerClick className="w-3.5 h-3.5 text-green-400" />
+              <span className="text-[10px] uppercase tracking-[0.2em] text-white dark:text-green-400 font-bold font-mono">
                 System Interface
               </span>
             </div>
