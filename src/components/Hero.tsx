@@ -39,7 +39,7 @@ export default function Hero() {
             {/* The Minimalist Tooltip */}
             <div className="flex items-center gap-2 bg-black/90 dark:bg-zinc-900 border border-white/10 dark:border-green-500/30 px-3 py-1 rounded-md backdrop-blur-md animate-in fade-in zoom-in duration-700 shadow-2xl">
               <MousePointer2 className="w-3 h-3 text-green-400" />
-              <span className="text-[9px] uppercase tracking-[0.2em] text-green-400 font-bold">
+              <span className="text-[6px] uppercase tracking-[0.2em] text-green-400 font-bold">
                 Click Logo to Initialize
               </span>
             </div>
