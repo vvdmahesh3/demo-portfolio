@@ -64,10 +64,13 @@ const Resume: React.FC = () => {
 
   const suggestions = [
     "List internships",
-    "Show top 5 skills",
+    " 5 skills",
     "Major achievements",
-    "Education summary",
-    "Certifications list",
+    "Education",
+    "projects",
+    "Work experience",
+    "Contact information",
+    "personal"
   ];
 
   const handleAsk = async (overrideQuestion?: string) => {
