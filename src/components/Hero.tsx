@@ -1,15 +1,27 @@
-// src/components/Hero.tsx
 import React, { useEffect, useState } from "react";
 import ProximityText from "./ProximityText";
-import { Github, Linkedin, Mail } from "lucide-react";
+import { Github, Linkedin, Mail, MousePointerClick } from "lucide-react";
 import WithText from "./WithText";
 
 export default function Hero() {
   const [showScrollIcon, setShowScrollIcon] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowScrollIcon(true), 3000);
-    return () => clearTimeout(timer);
+    // 1. Show the "M" hint shortly after load
+    const hintTimer = setTimeout(() => setShowHint(true), 1500);
+    
+    // 2. Hide the hint after 6 seconds so it doesn't stay forever
+    const hideHintTimer = setTimeout(() => setShowHint(false), 7500);
+
+    // 3. Show the bottom scroll icon
+    const scrollTimer = setTimeout(() => setShowScrollIcon(true), 3000);
+
+    return () => {
+      clearTimeout(hintTimer);
+      clearTimeout(hideHintTimer);
+      clearTimeout(scrollTimer);
+    };
   }, []);
 
   const marqueeText =
@@ -20,6 +32,25 @@ export default function Hero() {
       id="home"
       className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden px-4 text-center bg-white dark:bg-black transition-colors duration-700"
     >
+      {/* --- SECRET INTERFACE INDICATOR (Top Left) --- */}
+      <div className="absolute top-8 left-8 z-50 pointer-events-none">
+        {showHint && (
+          <div className="relative flex items-center">
+            {/* The Sonar Ripples around the "M" area */}
+            <div className="absolute -left-2 w-10 h-10 rounded-full border border-green-500 animate-sonar" />
+            <div className="absolute -left-2 w-10 h-10 rounded-full border border-green-500 animate-sonar [animation-delay:0.5s]" />
+            
+            {/* The Floating Label */}
+            <div className="ml-12 flex items-center gap-2 bg-black/50 dark:bg-green-500/10 border border-black/10 dark:border-green-500/20 px-3 py-1.5 rounded-full backdrop-blur-md animate-in fade-in slide-in-from-left-4 duration-1000">
+              <MousePointerClick className="w-3.5 h-3.5 text-black dark:text-green-400" />
+              <span className="text-[10px] uppercase tracking-[0.2em] text-black dark:text-green-400 font-bold font-mono">
+                System Interface
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Top Marquee */}
       <div className="w-full overflow-hidden pt-8">
         <div className="flex animate-marqueeLeft whitespace-nowrap will-change-transform">

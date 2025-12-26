@@ -1,7 +1,6 @@
-// src/components/SuggestionBox.tsx
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, CheckCircle2 } from "lucide-react";
+import { MessageCircle, X, Send, CheckCircle2, Sparkles } from "lucide-react";
 import confetti from "canvas-confetti";
 
 const FORMSPREE_URL = "https://formspree.io/f/mykgoego";
@@ -47,7 +46,6 @@ const SuggestionBox: React.FC = () => {
     e.preventDefault();
 
     if (!formData.feedback.trim()) {
-      alert("Please write your message.");
       return;
     }
 
@@ -73,10 +71,12 @@ const SuggestionBox: React.FC = () => {
       setIsSubmitting(false);
       setIsSubmitted(true);
 
+      // Super cool success effect
       confetti({
-        particleCount: 70,
-        spread: 60,
-        origin: { y: 0.6 },
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.7 },
+        colors: ["#00FFB3", "#FFD700", "#FFFFFF"],
       });
 
       setFormData({
@@ -88,10 +88,11 @@ const SuggestionBox: React.FC = () => {
 
       localStorage.removeItem("suggestionBox");
 
+      // Close modal after success
       setTimeout(() => {
         setIsSubmitted(false);
         setIsOpen(false);
-      }, 2500);
+      }, 3000);
     } catch (err) {
       console.error(err);
       setIsSubmitting(false);
@@ -101,134 +102,166 @@ const SuggestionBox: React.FC = () => {
 
   return (
     <>
-      {/* Floating Button */}
-      <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 md:left-10 w-14 h-14
-                   bg-yellow-400 text-black rounded-full shadow-lg
-                   hover:shadow-[0_0_15px_var(--accent)]
-                   flex items-center justify-center z-50"
-      >
-        <MessageCircle size={22} />
-      </motion.button>
+      {/* --- FLOATING BUTTON WITH ADVANCED UI --- */}
+      <div className="fixed bottom-6 left-6 md:left-10 z-50">
+        {/* External Glow Pulse */}
+        <div className="absolute inset-0 bg-yellow-400 rounded-full animate-sonar opacity-40" />
+        
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsOpen(true)}
+          className="relative w-14 h-14 bg-yellow-400 text-black rounded-full shadow-[0_10px_40px_rgba(250,204,21,0.4)] flex items-center justify-center overflow-hidden border-2 border-yellow-200"
+        >
+          <MessageCircle size={24} />
+        </motion.button>
+      </div>
 
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Backdrop */}
+            {/* Backdrop with Heavy Blur */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.7 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60]"
             />
 
-            {/* Modal */}
+            {/* Modal Container */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-0 flex items-center justify-center z-50 p-4"
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.95 }}
+              className="fixed inset-0 flex items-center justify-center z-[70] p-4 pointer-events-none"
             >
-              <div
-                className="w-full max-w-md rounded-2xl overflow-hidden
-                           bg-white text-black border border-blue-500/30
-                           dark:bg-black/80 dark:text-white dark:border-[#00FFB3]/40
-                           shadow-[0_0_20px_var(--accent)]"
-              >
+              <div className="w-full max-w-md rounded-[2.5rem] overflow-hidden pointer-events-auto
+                              bg-white/90 dark:bg-black/80 backdrop-blur-2xl
+                              border border-white/20 dark:border-[#00FFB3]/20
+                              shadow-[0_20px_60px_rgba(0,0,0,0.5)] relative">
+                
+                {/* Visual Accent Glow Inside Modal */}
+                <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#00FFB3]/10 blur-[60px] rounded-full" />
+
                 {/* Header */}
-                <div className="flex justify-between items-center p-5 border-b
-                                border-blue-500/20 dark:border-[#00FFB3]/20">
-                  <h3 className="text-lg font-semibold text-blue-600 dark:text-[#00FFB3]">
-                    Suggestion Box
-                  </h3>
+                <div className="flex justify-between items-center px-8 pt-8 pb-4">
+                  <div>
+                    <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
+                      Feedback <Sparkles className="text-yellow-400 w-5 h-5" />
+                    </h3>
+                    <p className="text-xs text-gray-500 font-medium tracking-wide uppercase mt-1">
+                      Let's refine the vision
+                    </p>
+                  </div>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 rounded-full hover:bg-blue-500/10 dark:hover:bg-[#00FFB3]/10"
+                    className="p-3 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-red-500/10 hover:text-red-500 transition-all group"
                   >
-                    <X size={18} />
+                    <X size={20} />
                   </button>
                 </div>
 
                 {/* Body */}
-                <div className="p-6">
+                <div className="px-8 pb-8">
                   {isSubmitted ? (
-                    <div className="text-center py-8">
-                      <CheckCircle2
-                        size={48}
-                        className="mx-auto text-blue-600 dark:text-[#00FFB3]"
-                      />
-                      <p className="mt-3 text-lg font-medium">
-                        Feedback sent successfully 🚀
-                      </p>
-                    </div>
+                    <motion.div 
+                      initial={{ scale: 0.8 }} 
+                      animate={{ scale: 1 }} 
+                      className="text-center py-10"
+                    >
+                      <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/20">
+                        <CheckCircle2 size={40} className="text-green-500" />
+                      </div>
+                      <h4 className="text-xl font-bold dark:text-white">Transmission Sent!</h4>
+                      <p className="text-gray-500 mt-2 text-sm">Your insight has been successfully logged.</p>
+                    </motion.div>
                   ) : (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        <input
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          placeholder="Your name"
-                          className="px-3 py-2 rounded-lg bg-gray-100 border
-                                     dark:bg-black/40 dark:border-gray-700"
-                        />
-                        <input
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="Email"
-                          className="px-3 py-2 rounded-lg bg-gray-100 border
-                                     dark:bg-black/40 dark:border-gray-700"
-                        />
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      {/* Name and Email Row */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Name</label>
+                          <input
+                            required
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            placeholder="Mahesh"
+                            className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent dark:border-white/10 focus:border-[#00FFB3] focus:ring-4 focus:ring-[#00FFB3]/10 outline-none transition-all dark:text-white"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Email</label>
+                          <input
+                            required
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            placeholder="id@host.com"
+                            className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent dark:border-white/10 focus:border-[#00FFB3] focus:ring-4 focus:ring-[#00FFB3]/10 outline-none transition-all dark:text-white"
+                          />
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2">
-                        {categories.map((cat) => (
-                          <button
-                            type="button"
-                            key={cat}
-                            onClick={() =>
-                              setFormData((p) => ({ ...p, category: cat }))
-                            }
-                            className={`px-3 py-2 rounded-full text-sm border
-                              ${
+                      {/* Category Selection Chips */}
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Category</label>
+                        <div className="flex flex-wrap gap-2">
+                          {categories.map((cat) => (
+                            <button
+                              type="button"
+                              key={cat}
+                              onClick={() => setFormData((p) => ({ ...p, category: cat }))}
+                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 border ${
                                 formData.category === cat
-                                  ? "border-blue-600 text-blue-600 dark:border-[#00FFB3] dark:text-[#00FFB3]"
-                                  : "border-gray-300 text-gray-500 dark:border-gray-700"
+                                  ? "bg-[#00FFB3] border-[#00FFB3] text-black shadow-lg shadow-[#00FFB3]/20 scale-105"
+                                  : "bg-transparent border-gray-200 dark:border-white/10 text-gray-500 hover:border-gray-400 dark:hover:border-white/30"
                               }`}
-                          >
-                            {cat}
-                          </button>
-                        ))}
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
-                      <textarea
-                        name="feedback"
-                        rows={5}
-                        value={formData.feedback}
-                        onChange={handleChange}
-                        placeholder="Write your message..."
-                        className="w-full px-3 py-2 rounded-lg bg-gray-100 border
-                                   resize-none dark:bg-black/40 dark:border-gray-700"
-                      />
+                      {/* Message Area */}
+                      <div className="space-y-2 relative">
+                        <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Your Message</label>
+                        <textarea
+                          required
+                          name="feedback"
+                          rows={4}
+                          value={formData.feedback}
+                          onChange={handleChange}
+                          placeholder="What would you like to see next?"
+                          className="w-full px-4 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent dark:border-white/10 focus:border-[#00FFB3] focus:ring-4 focus:ring-[#00FFB3]/10 outline-none transition-all resize-none dark:text-white"
+                        />
+                        <div className="absolute bottom-4 right-4 text-[9px] font-mono text-gray-400 uppercase tracking-tighter">
+                          {formData.feedback.length} Characters
+                        </div>
+                      </div>
 
-                      <button
+                      {/* Submit Button */}
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full flex justify-center items-center gap-2
-                                   bg-blue-600 text-white py-3 rounded-lg
-                                   dark:bg-[#00FFB3] dark:text-black"
+                        className="w-full py-4 rounded-2xl bg-black dark:bg-[#00FFB3] text-white dark:text-black font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-2xl transition-all disabled:opacity-50"
                       >
-                        {isSubmitting ? "Sending..." : <>
-                          <Send size={14} /> Send Feedback
-                        </>}
-                      </button>
+                        {isSubmitting ? (
+                          <div className="w-5 h-5 border-2 border-white/30 dark:border-black/30 border-t-white dark:border-t-black rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <Send size={18} />
+                            Deploy Feedback
+                          </>
+                        )}
+                      </motion.button>
                     </form>
                   )}
                 </div>
