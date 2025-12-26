@@ -11,7 +11,6 @@ import {
   Keyboard,
   Briefcase,
   Code,
-  Sparkles,
   Cpu
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -32,12 +31,24 @@ const CountUp: React.FC<{ end: number; suffix?: string }> = ({ end, suffix = "" 
       if (frame >= totalFrames) {
         setVal(end);
         clearInterval(id);
-      } else { setVal(start); }
+      } else {
+        setVal(start);
+      }
     }, frameRate);
     return () => clearInterval(id);
   }, [end]);
   return <span>{val}{suffix}</span>;
 };
+
+/* ---------------- Interfaces ---------------- */
+interface ResumeCardProps {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  action: () => void;
+  primary?: boolean;
+  highlight?: boolean;
+}
 
 /* ---------------- Main Component ---------------- */
 const Resume: React.FC = () => {
@@ -47,8 +58,8 @@ const Resume: React.FC = () => {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Dynamic URL construction for GitHub Pages compatibility
-  const resumePdfUrl = `${import.meta.env.BASE_URL}VVD_Mahesh(Resume).pdf`;
+  // Configuration
+  const resumePdfUrl = "./VVD_Mahesh(Resume).pdf"; 
   const API_URL = "https://mahesh-backend-hub.onrender.com";
 
   const suggestions = [
@@ -59,15 +70,17 @@ const Resume: React.FC = () => {
     "Certifications list",
   ];
 
-  const handleAsk = async () => {
-    if (!question.trim()) return;
+  const handleAsk = async (overrideQuestion?: string) => {
+    const q = overrideQuestion || question;
+    if (!q.trim()) return;
+    
     setLoading(true);
     setAnswer("");
     try {
       const res = await fetch(`${API_URL}/api/ask-resume`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: question.trim() }),
+        body: JSON.stringify({ question: q.trim() }),
       });
       if (!res.ok) throw new Error("Server error");
       const data = await res.json();
@@ -114,7 +127,6 @@ const Resume: React.FC = () => {
 
         {/* Action & Stats Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch mb-12">
-          
           {/* Left: Quick Stats Terminal */}
           <div className="lg:col-span-4 grid grid-cols-2 gap-4">
             {stats.map((s, i) => (
@@ -189,7 +201,7 @@ const Resume: React.FC = () => {
                       {suggestions.map((s, idx) => (
                         <button
                           key={idx}
-                          onClick={() => { setQuestion(s); setTimeout(() => handleAsk(), 100); }}
+                          onClick={() => { setQuestion(s); handleAsk(s); }}
                           className="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-white/5 hover:border-blue-600 dark:hover:border-[#00FFB3] transition-all"
                         >
                           {s}
@@ -206,7 +218,7 @@ const Resume: React.FC = () => {
                         className="flex-1 bg-transparent px-4 py-2 text-sm focus:outline-none dark:text-white font-mono"
                       />
                       <button
-                        onClick={handleAsk}
+                        onClick={() => handleAsk()}
                         disabled={loading}
                         className="p-4 rounded-2xl bg-zinc-900 dark:bg-[#00FFB3] text-white dark:text-black hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-50"
                       >
@@ -227,7 +239,7 @@ const Resume: React.FC = () => {
                         <span className="text-[10px] font-black tracking-widest uppercase">Analyzing_Data_Packets...</span>
                       </div>
                     ) : answer ? (
-                      <div className="dark:text-zinc-300 prose prose-invert prose-sm">
+                      <div className="dark:text-zinc-300 prose prose-invert prose-sm max-w-none">
                         <ReactMarkdown>{answer}</ReactMarkdown>
                       </div>
                     ) : (
@@ -261,18 +273,17 @@ const Resume: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
-
       </div>
     </section>
   );
 };
 
 /* ---------------- Helper Component ---------------- */
-const ResumeCard = ({ icon, title, subtitle, action, primary = false, highlight = false }: any) => (
+const ResumeCard: React.FC<ResumeCardProps> = ({ icon, title, subtitle, action, primary = false, highlight = false }) => (
   <motion.button
     whileHover={{ y: -8 }}
     onClick={action}
-    className={`p-8 rounded-[40px] border flex flex-col items-center justify-center text-center transition-all duration-500 group shadow-lg ${
+    className={`p-8 rounded-[40px] border flex flex-col items-center justify-center text-center transition-all duration-500 group shadow-lg w-full ${
       primary 
         ? "bg-zinc-900 dark:bg-[#00FFB3] border-zinc-900 dark:border-[#00FFB3]" 
         : highlight

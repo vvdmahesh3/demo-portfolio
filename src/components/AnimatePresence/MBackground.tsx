@@ -41,20 +41,20 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
   });
 
   const playerRef = useRef<any>(null);
-  
-  // ✅ UPDATED: Connected to your live Render Backend
   const API_URL = "https://mahesh-backend-hub.onrender.com"; 
 
   // Initialize YouTube IFrame API
   useEffect(() => {
-    if (!(window as any).YT) {
+    // Only append script if it doesn't exist
+    if (!window.YT) {
       const tag = document.createElement('script');
       tag.src = "https://www.youtube.com/iframe_api";
-      document.body.appendChild(tag);
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
     }
 
-    (window as any).onYouTubeIframeAPIReady = () => {
-      playerRef.current = new (window as any).YT.Player('yt-player-hidden', {
+    const initPlayer = () => {
+      playerRef.current = new window.YT.Player('yt-player-hidden', {
         height: '0',
         width: '0',
         videoId: currentSong.id,
@@ -75,9 +75,20 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
         }
       });
     };
+
+    if (window.YT && window.YT.Player) {
+      initPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = initPlayer;
+    }
+
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.destroy();
+      }
+    };
   }, []);
 
-  // Playback Logic
   const togglePlay = () => {
     if (!playerRef.current) return;
     if (isPlaying) {
@@ -87,25 +98,23 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
     }
   };
 
-  // Search Logic
+  // ✅ UPDATED SEARCH LOGIC
   const handleSearch = async () => {
     if (!query.trim()) return;
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/music-search?q=${encodeURIComponent(query)}`);
-      if (!res.ok) throw new Error("Backend offline");
+      if (!res.ok) throw new Error("Offline");
       const data = await res.json();
       setResults(data);
     } catch (e) { 
-      console.error("Search API Error", e);
-      // Fallback result if backend is sleeping
-      setResults([currentSong]);
+      console.error("API Error", e);
+      setResults([currentSong]); // Fallback if server is booting
     } finally {
       setLoading(false);
     }
   };
 
-  // Song Selection Logic
   const selectSong = (song: Song) => {
     setCurrentSong(song);
     if (playerRef.current) {
@@ -122,10 +131,8 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
       exit={{ opacity: 0 }} 
       className="fixed inset-0 z-[200] bg-black overflow-hidden flex flex-col items-center justify-center font-mono"
     >
-      {/* Hidden Headless Player */}
       <div id="yt-player-hidden" className="absolute invisible pointer-events-none" />
       
-      {/* Close Lab Overlay */}
       <button 
         onClick={onClose} 
         className="absolute top-8 right-8 p-4 rounded-full bg-white/5 hover:bg-red-500/20 text-white z-[210] transition-all group"
@@ -136,9 +143,9 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
       {/* 1. CINEMATIC BACKGROUND IDENTITY */}
       <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] select-none pointer-events-none">
         <motion.h1 
-          animate={{ scale: isPlaying ? [1, 1.05, 1] : 1 }}
+          animate={{ scale: isPlaying ? [1, 1.08, 1] : 1 }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="text-[60vw] font-black text-white"
+          className="text-[60vw] font-black text-white leading-none"
         >
           M
         </motion.h1>
@@ -148,12 +155,17 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
       <div className="relative z-10 text-center px-6">
         <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
           <h2 
-            className="text-5xl md:text-8xl font-black text-white tracking-tighter uppercase mb-2" 
-            style={{ textShadow: "0 0 35px rgba(0, 255, 179, 0.3)" }}
+            className="text-4xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter uppercase mb-2 leading-none" 
+            style={{ textShadow: "0 0 50px rgba(0, 255, 179, 0.2)" }}
           >
             V V D MAHESH <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00FFB3] to-cyan-400">PERURI</span>
           </h2>
-          <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-[#00FFB3]/40 to-transparent mt-4" />
+          <motion.div 
+            initial={{ width: 0 }}
+            animate={{ width: "100%" }}
+            transition={{ delay: 0.5, duration: 1 }}
+            className="h-[1px] bg-gradient-to-r from-transparent via-[#00FFB3]/40 to-transparent mt-6" 
+          />
         </motion.div>
       </div>
 
@@ -161,7 +173,6 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
       <div className="absolute bottom-10 w-full max-w-4xl px-6">
         <div className="h-24 rounded-[32px] bg-zinc-950/80 backdrop-blur-3xl border border-white/10 shadow-2xl flex items-center justify-between px-8 relative overflow-hidden group">
           
-          {/* Metadata + Banner Trigger for Search */}
           <div 
             className="flex items-center gap-4 cursor-pointer group/banner" 
             onClick={() => setSearchOpen(true)}
@@ -173,14 +184,13 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
               </div>
             </div>
             <div className="hidden md:block text-left">
-              <h4 className="text-xs font-black text-white uppercase tracking-wider">{currentSong.title}</h4>
+              <h4 className="text-xs font-black text-white uppercase tracking-wider truncate max-w-[150px]">{currentSong.title}</h4>
               <p className="text-[9px] text-[#00FFB3] font-bold uppercase tracking-[0.2em] mt-1">
                 {currentSong.artist}
               </p>
             </div>
           </div>
 
-          {/* Core Controls */}
           <div className="flex items-center gap-6">
             <button className="text-zinc-600 hover:text-white transition-colors">
               <SkipBack size={20} />
@@ -198,7 +208,6 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
             </button>
           </div>
 
-          {/* Volume + Live Indicators */}
           <div className="flex items-center gap-6">
             <div className="hidden sm:flex items-center gap-3">
               <Volume2 size={16} className="text-zinc-500" />
@@ -226,14 +235,14 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
         </div>
       </div>
 
-      {/* 4. CENTERED SEARCH OVERLAY MODULE */}
+      {/* 4. SEARCH OVERLAY */}
       <AnimatePresence>
         {searchOpen && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 20 }} 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }} 
             animate={{ opacity: 1, scale: 1, y: 0 }} 
-            exit={{ opacity: 0, scale: 0.9, y: 20 }} 
-            className="absolute z-[220] w-full max-w-xl bg-zinc-900 border border-white/10 rounded-[40px] p-8 shadow-[0_20px_100px_rgba(0,0,0,0.8)] backdrop-blur-2xl"
+            exit={{ opacity: 0, scale: 0.95, y: 20 }} 
+            className="absolute z-[220] w-[90%] max-w-xl bg-zinc-900 border border-white/10 rounded-[40px] p-8 shadow-[0_20px_100px_rgba(0,0,0,0.8)] backdrop-blur-2xl"
           >
             <div className="flex gap-4 mb-8">
               <input 
@@ -247,23 +256,23 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
               />
               <button 
                 onClick={handleSearch} 
-                className="bg-[#00FFB3] text-black px-8 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-transform"
+                className="bg-[#00FFB3] text-black px-6 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-transform flex items-center justify-center min-w-[100px]"
               >
                 {loading ? <Loader2 className="animate-spin" size={16} /> : "Execute"}
               </button>
             </div>
 
-            <div className="space-y-4 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
               {results.length > 0 ? results.map((song) => (
                 <div 
                   key={song.id} 
                   onClick={() => selectSong(song)} 
                   className="flex items-center gap-5 p-3 rounded-3xl hover:bg-white/5 cursor-pointer border border-transparent hover:border-white/10 transition-all group/item"
                 >
-                  <img src={song.banner} className="w-14 h-14 rounded-2xl object-cover shadow-lg" />
-                  <div className="text-left">
-                    <h5 className="text-sm font-bold text-white uppercase group-hover/item:text-[#00FFB3] transition-colors">{song.title}</h5>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{song.artist}</p>
+                  <img src={song.banner} className="w-12 h-12 rounded-xl object-cover shadow-lg" />
+                  <div className="text-left flex-1 min-w-0">
+                    <h5 className="text-sm font-bold text-white uppercase group-hover/item:text-[#00FFB3] transition-colors truncate">{song.title}</h5>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider truncate">{song.artist}</p>
                   </div>
                 </div>
               )) : (
