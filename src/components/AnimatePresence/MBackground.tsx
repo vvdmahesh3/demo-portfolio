@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, Search, X, 
-  Loader2, Music, Sparkles, ChevronRight, Disc, Activity
+  Loader2, Music, Sparkles, ChevronRight, Disc, Activity, Terminal
 } from "lucide-react";
 
 interface LabProps { onClose: () => void; }
@@ -19,12 +19,13 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
   const [volume, setVolume] = useState(70);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const playerRef = useRef<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const API_URL = "https://mahesh-backend-hub.onrender.com";
 
-  // ================= 1. HIGH-END NEURAL ANIMATION (MATCHES VIDEO) =================
+  // ================= 1. PRO-LEVEL PARTICLE PHYSICS (MOUSE-REACTIVE) =================
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -32,7 +33,7 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
     if (!ctx) return;
 
     let particles: any[] = [];
-    let mouse = { x: -100, y: -100, active: false };
+    let mouse = { x: -1000, y: -1000, radius: 180 };
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -40,16 +41,17 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
     };
 
     class Particle {
-      x: number; y: number; baseX: number; baseY: number; size: number;
+      x: number; y: number; baseX: number; baseY: number; size: number; density: number;
       constructor() {
         this.x = Math.random() * canvas!.width;
         this.y = Math.random() * canvas!.height;
         this.baseX = this.x;
         this.baseY = this.y;
         this.size = Math.random() * 2 + 1;
+        this.density = (Math.random() * 30) + 1;
       }
       draw() {
-        ctx!.fillStyle = "rgba(0, 255, 179, 0.5)";
+        ctx!.fillStyle = "rgba(0, 255, 179, 0.7)";
         ctx!.beginPath();
         ctx!.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx!.fill();
@@ -60,22 +62,21 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
         let distance = Math.sqrt(dx * dx + dy * dy);
         let forceDirectionX = dx / distance;
         let forceDirectionY = dy / distance;
-        let maxDistance = 200;
-        let force = (maxDistance - distance) / maxDistance;
-        let directionX = forceDirectionX * force * 5;
-        let directionY = forceDirectionY * force * 5;
+        let force = (mouse.radius - distance) / mouse.radius;
+        let directionX = forceDirectionX * force * this.density;
+        let directionY = forceDirectionY * force * this.density;
 
-        if (distance < maxDistance) {
+        if (distance < mouse.radius) {
           this.x -= directionX;
           this.y -= directionY;
         } else {
           if (this.x !== this.baseX) {
             let dx = this.x - this.baseX;
-            this.x -= dx / 20;
+            this.x -= dx / 10;
           }
           if (this.y !== this.baseY) {
             let dy = this.y - this.baseY;
-            this.y -= dy / 20;
+            this.y -= dy / 10;
           }
         }
       }
@@ -83,7 +84,7 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
 
     const init = () => {
       particles = [];
-      const particleCount = (canvas.width * canvas.height) / 9000;
+      const particleCount = (canvas.width * canvas.height) / 7000;
       for (let i = 0; i < particleCount; i++) particles.push(new Particle());
     };
 
@@ -96,9 +97,9 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
           let dx = particles[i].x - particles[j].x;
           let dy = particles[i].y - particles[j].y;
           let distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance < 100) {
-            ctx.strokeStyle = `rgba(0, 255, 179, ${1 - distance / 100 - 0.7})`;
-            ctx.lineWidth = 1;
+          if (distance < 110) {
+            ctx.strokeStyle = `rgba(0, 255, 179, ${1 - distance / 110 - 0.7})`;
+            ctx.lineWidth = 0.8;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
@@ -115,7 +116,7 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
     return () => window.removeEventListener("resize", resize);
   }, []);
 
-  // ================= 2. YOUTUBE PLAYER LOGIC =================
+  // ================= 2. YOUTUBE ENGINE =================
   useEffect(() => {
     if (!(window as any).YT) {
       const tag = document.createElement("script");
@@ -139,10 +140,12 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
 
   const selectSong = (song: Song) => {
     if (!playerReady) return;
+    setIsTransitioning(true);
     setCurrentSong(song);
     playerRef.current.loadVideoById(song.id);
     setIsPlaying(true);
     setSearchOpen(false);
+    setTimeout(() => setIsTransitioning(false), 500);
   };
 
   const handleSearch = async () => {
@@ -155,142 +158,168 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-[#020202] overflow-hidden flex flex-col items-center justify-center">
-      <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-60" />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className={`fixed inset-0 z-[200] bg-black overflow-hidden flex flex-col items-center justify-center ${isTransitioning ? 'animate-hit' : ''}`}>
+      <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-40" />
       <div id="yt-player-instance" className="absolute invisible" />
 
-      {/* --- REFINED EXIT --- */}
-      <button onClick={onClose} className="absolute top-10 right-10 p-3 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-[#00FFB3] hover:scale-110 transition-all z-[210] backdrop-blur-md">
-        <X size={20} />
-      </button>
-
-      {/* --- CENTERED IDENTITY (V V D MAHESH PERURI) --- */}
-      <div className="relative z-10 text-center pointer-events-none select-none">
-        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 1.5, ease: "easeOut" }}>
-          <div className="flex items-center justify-center gap-3 mb-6 opacity-40 tracking-[0.6em] text-[10px] text-white uppercase font-black">
-             <Activity size={14} className="text-[#00FFB3]" /> Neural Interface Active
+      {/* --- HUD HEADER --- */}
+      <div className="absolute top-0 left-0 w-full p-10 flex justify-between items-start pointer-events-none z-[210]">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 text-[#00FFB3] text-[9px] font-black uppercase tracking-[0.4em]">
+            <Terminal size={12} /> System Status: Operational
           </div>
-          <h2 className="text-6xl md:text-[130px] font-black uppercase tracking-tighter leading-[0.8] text-white">
+          <div className="text-white/20 text-[8px] uppercase tracking-[0.2em] font-mono">
+            Loc: 17.6868° N, 83.2185° E // VISUAL_LAB_V3.0
+          </div>
+        </div>
+        <button onClick={onClose} className="pointer-events-auto p-4 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-red-500 hover:bg-red-500/10 transition-all">
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* --- CENTERED IDENTITY (CINEMATIC) --- */}
+      <div className="relative z-10 text-center pointer-events-none">
+        <motion.div 
+            animate={isPlaying ? { scale: [1, 1.02, 1] } : {}} 
+            transition={{ repeat: Infinity, duration: 2 }}
+        >
+          <h2 className="text-7xl md:text-[140px] font-black uppercase tracking-tighter leading-[0.75] text-white select-none">
             V V D MAHESH <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00FFB3] via-emerald-400 to-cyan-500 drop-shadow-[0_0_50px_rgba(0,255,179,0.5)] italic">
+            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-[#00FFB3] to-[#00FFB3] drop-shadow-[0_0_60px_rgba(0,255,179,0.6)] italic">
               PERURI
             </span>
           </h2>
-          <motion.p animate={{ opacity: [0.2, 0.5, 0.2] }} transition={{ repeat: Infinity, duration: 3 }} className="mt-8 text-[10px] tracking-[1em] text-white/50 uppercase ml-[1em]">
-            Creative Engineering
-          </motion.p>
+          <div className="mt-10 flex items-center justify-center gap-6">
+            <div className="h-[1px] w-24 bg-gradient-to-r from-transparent to-[#00FFB3]/40" />
+            <span className="text-[10px] tracking-[0.8em] text-white/40 uppercase">Creative Technologist</span>
+            <div className="h-[1px] w-24 bg-gradient-to-l from-transparent to-[#00FFB3]/40" />
+          </div>
         </motion.div>
       </div>
 
-      {/* --- DYNAMIC PLAYER DOCK --- */}
+      {/* --- HIGH-END PLAYER DOCK --- */}
       <div className="absolute bottom-12 w-full max-w-5xl px-8 z-50">
-        <div className="h-28 rounded-[40px] bg-black/40 backdrop-blur-3xl border border-white/5 shadow-[0_20px_80px_rgba(0,0,0,0.8)] flex items-center justify-between px-10 relative overflow-hidden group">
+        <div className="h-28 rounded-[35px] bg-black/40 backdrop-blur-3xl border border-white/10 shadow-[0_30px_100px_rgba(0,0,0,0.9)] flex items-center justify-between px-10 relative group">
           
-          {/* Internal Glow Effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#00FFB3]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+          {/* Audio Visualizer Bars (HUD Style) */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 flex gap-1 h-1">
+             {[...Array(20)].map((_, i) => (
+               <motion.div 
+                 key={i} 
+                 animate={isPlaying ? { height: [2, Math.random() * 15 + 5, 2] } : { height: 2 }} 
+                 className="w-4 bg-[#00FFB3]/20 rounded-b-full"
+               />
+             ))}
+          </div>
 
           {/* Left: Metadata */}
-          <div className="flex items-center gap-6 min-w-[300px]">
+          <div className="flex items-center gap-6 min-w-[320px]">
             {currentSong ? (
-              <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center gap-5">
-                <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-white/10 rotate-3 shadow-2xl">
+              <div className="flex items-center gap-5">
+                <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-white/20 shadow-2xl group-hover:rotate-6 transition-transform">
                   <img src={currentSong.banner} className="w-full h-full object-cover" alt="art" />
                   {isPlaying && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <Disc className="w-8 h-8 text-[#00FFB3] animate-spin-slow" />
+                      <div className="flex gap-1">
+                         <motion.div animate={{ height: [4, 12, 4] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-1 bg-[#00FFB3] rounded-full" />
+                         <motion.div animate={{ height: [8, 4, 8] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-1 bg-[#00FFB3] rounded-full" />
+                         <motion.div animate={{ height: [4, 10, 4] }} transition={{ repeat: Infinity, duration: 0.7 }} className="w-1 bg-[#00FFB3] rounded-full" />
+                      </div>
                     </div>
                   )}
                 </div>
                 <div>
-                  <h4 className="text-xs font-black uppercase text-white tracking-widest truncate max-w-[160px]">{currentSong.title}</h4>
-                  <p className="text-[9px] font-bold text-[#00FFB3] uppercase tracking-[0.2em] mt-1">SST // {currentSong.artist}</p>
+                  <h4 className="text-xs font-black uppercase text-white tracking-[0.1em] truncate max-w-[180px]">{currentSong.title}</h4>
+                  <p className="text-[9px] font-bold text-[#00FFB3] uppercase tracking-[0.3em] mt-1 opacity-70">Source // YouTube_API</p>
                 </div>
-              </motion.div>
+              </div>
             ) : (
               <div onClick={() => setSearchOpen(true)} className="flex items-center gap-4 cursor-pointer text-white/20 hover:text-[#00FFB3] transition-all group/call">
-                <Music className="w-6 h-6 group-hover/call:rotate-12 transition-transform" />
-                <span className="text-[10px] uppercase font-black tracking-[0.4em]">Initialize Audio System</span>
+                <Music className="w-6 h-6 animate-pulse" />
+                <span className="text-[10px] uppercase font-black tracking-[0.5em]">System Idle // Click to Load</span>
               </div>
             )}
           </div>
 
           {/* Center: Controls */}
           <div className="flex items-center gap-10">
-            <button onClick={() => playerRef.current?.seekTo(playerRef.current.getCurrentTime() - 10)} className="text-white/20 hover:text-white transition-colors"><SkipBack size={24} /></button>
+            <button onClick={() => playerRef.current?.seekTo(playerRef.current.getCurrentTime() - 10)} className="text-white/10 hover:text-white transition-colors"><SkipBack size={26} /></button>
             <motion.button 
-              whileHover={{ scale: 1.1, boxShadow: "0 0 30px rgba(255,255,255,0.2)" }} 
+              whileHover={{ scale: 1.1, boxShadow: "0 0 40px rgba(0, 255, 179, 0.3)" }} 
               whileTap={{ scale: 0.9 }} 
               onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()} 
-              className="w-20 h-20 rounded-full bg-white text-black flex items-center justify-center"
+              className="w-20 h-20 rounded-full bg-[#00FFB3] text-black flex items-center justify-center shadow-2xl transition-all"
             >
-              {isPlaying ? <Pause size={30} fill="black" /> : <Play size={30} fill="black" className="ml-1" />}
+              {isPlaying ? <Pause size={32} fill="black" /> : <Play size={32} fill="black" className="ml-1" />}
             </motion.button>
-            <button onClick={() => playerRef.current?.seekTo(playerRef.current.getCurrentTime() + 10)} className="text-white/20 hover:text-white transition-colors"><SkipForward size={24} /></button>
+            <button onClick={() => playerRef.current?.seekTo(playerRef.current.getCurrentTime() + 10)} className="text-white/10 hover:text-white transition-colors"><SkipForward size={26} /></button>
           </div>
 
-          {/* Right: Volume & Search */}
+          {/* Right: Controls */}
           <div className="flex items-center gap-8">
-            <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+            <div className="flex items-center gap-4 bg-white/5 px-5 py-2.5 rounded-full border border-white/5 hover:border-[#00FFB3]/30 transition-all">
                <Volume2 size={16} className="text-[#00FFB3]" />
-               <input type="range" min="0" max="100" value={volume} onChange={(e) => { setVolume(parseInt(e.target.value)); playerRef.current?.setVolume(parseInt(e.target.value)); }} className="w-20 accent-[#00FFB3] h-[2px] cursor-pointer" />
+               <input type="range" min="0" max="100" value={volume} onChange={(e) => { setVolume(parseInt(e.target.value)); playerRef.current?.setVolume(parseInt(e.target.value)); }} className="w-24 accent-[#00FFB3] h-[2px] cursor-pointer" />
             </div>
-            <button onClick={() => setSearchOpen(true)} className="w-14 h-14 rounded-full bg-[#00FFB3] text-black flex items-center justify-center hover:shadow-[0_0_20px_#00FFB3] transition-all">
-              <Search size={22} />
+            <button onClick={() => setSearchOpen(true)} className="w-16 h-16 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-black hover:bg-[#00FFB3] flex items-center justify-center transition-all">
+              <Search size={24} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* --- ADVANCED SEARCH OVERLAY WITH SCROLL --- */}
+      {/* --- SEARCH OVERLAY WITH ADVANCED SCROLL --- */}
       <AnimatePresence>
         {searchOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[300] flex items-center justify-center p-6 bg-black/90 backdrop-blur-3xl">
-            <motion.div initial={{ y: 100, scale: 0.9 }} animate={{ y: 0, scale: 1 }} className="w-full max-w-2xl bg-[#080808] border border-white/10 rounded-[50px] p-10 relative overflow-hidden shadow-3xl">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[300] flex items-center justify-center p-6 bg-black/95 backdrop-blur-3xl">
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="w-full max-w-3xl bg-[#050505] border border-white/10 rounded-[50px] p-12 relative shadow-3xl">
               
-              <div className="flex items-center justify-between mb-10">
+              <div className="flex items-center justify-between mb-12">
                 <div className="flex items-center gap-3 text-[10px] font-black text-[#00FFB3] uppercase tracking-[0.5em]">
-                  <Sparkles size={16} /> Signal Search
+                  <Sparkles size={18} className="animate-spin-slow" /> Global Frequency Search
                 </div>
                 <button onClick={() => setSearchOpen(false)} className="text-white/20 hover:text-red-500 transition-colors"><X size={24} /></button>
               </div>
 
-              <div className="flex gap-4 mb-8">
+              <div className="flex gap-4 mb-10">
                 <input 
                   autoFocus value={query} 
                   onChange={(e) => setQuery(e.target.value)} 
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
-                  className="flex-1 bg-white/5 border border-white/10 px-8 py-5 rounded-[25px] text-white outline-none focus:border-[#00FFB3]/50 transition-all font-bold tracking-wide" 
-                  placeholder="Query artist, track, or genre..." 
+                  className="flex-1 bg-white/[0.03] border border-white/10 px-8 py-6 rounded-3xl text-white outline-none focus:border-[#00FFB3]/50 focus:bg-[#00FFB3]/5 transition-all text-lg placeholder:text-white/10" 
+                  placeholder="Query artist, track ID, or soundscape..." 
                 />
-                <button onClick={handleSearch} className="bg-[#00FFB3] text-black px-10 rounded-[25px] font-black text-[11px] tracking-widest uppercase hover:brightness-110 active:scale-95 transition-all">
+                <button onClick={handleSearch} className="bg-[#00FFB3] text-black px-12 rounded-3xl font-black text-xs tracking-widest uppercase hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(0,255,179,0.3)]">
                   {loading ? <Loader2 className="animate-spin" /> : "SEARCH"}
                 </button>
               </div>
 
-              {/* RESULTS AREA WITH SCROLL BAR */}
-              <div className="space-y-3 max-h-[450px] overflow-y-auto pr-4 custom-scrollbar">
+              {/* RESULTS AREA WITH SCROLL BAR ADVANCEMENT */}
+              <div className="space-y-4 max-h-[480px] overflow-y-auto pr-6 custom-scrollbar">
                 {results.length > 0 ? (
                   results.map((song) => (
                     <motion.div 
                       key={song.id} 
-                      whileHover={{ x: 10, backgroundColor: "rgba(255,255,255,0.05)" }} 
+                      whileHover={{ x: 15, backgroundColor: "rgba(0, 255, 179, 0.04)" }} 
                       onClick={() => selectSong(song)} 
-                      className="flex items-center gap-5 p-4 rounded-[30px] bg-white/[0.02] border border-transparent hover:border-[#00FFB3]/30 cursor-pointer transition-all group"
+                      className="flex items-center gap-6 p-5 rounded-[35px] bg-white/[0.02] border border-transparent hover:border-[#00FFB3]/20 cursor-pointer transition-all group"
                     >
-                      <div className="relative w-24 aspect-video rounded-xl overflow-hidden shadow-lg">
-                        <img src={song.banner} className="w-full h-full object-cover" alt="art" />
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                      <div className="relative w-28 aspect-video rounded-2xl overflow-hidden shadow-2xl">
+                        <img src={song.banner} className="w-full h-full object-cover grayscale-[40%] group-hover:grayscale-0 transition-all" alt="art" />
+                        <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors flex items-center justify-center">
+                           <Play size={16} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
                       </div>
                       <div className="flex-1">
-                        <h5 className="text-[12px] font-black text-white group-hover:text-[#00FFB3] uppercase tracking-tight transition-colors">{song.title}</h5>
-                        <p className="text-[9px] text-white/30 uppercase mt-1 font-bold tracking-widest">{song.artist}</p>
+                        <h5 className="text-[14px] font-black text-white group-hover:text-[#00FFB3] uppercase tracking-wide transition-colors">{song.title}</h5>
+                        <p className="text-[10px] text-white/30 uppercase mt-1 font-bold tracking-widest">Database Record // {song.artist}</p>
                       </div>
-                      <ChevronRight size={18} className="text-white/10 group-hover:text-[#00FFB3] transition-colors" />
+                      <ChevronRight size={20} className="text-white/10 group-hover:text-[#00FFB3] group-hover:translate-x-1 transition-all" />
                     </motion.div>
                   ))
                 ) : (
-                  <div className="text-center py-20 text-white/10 text-[10px] font-black uppercase tracking-[1em]">
-                    {loading ? "Searching Database..." : "No Signals Found"}
+                  <div className="text-center py-24 text-white/5 text-[11px] font-black uppercase tracking-[1.5em] italic">
+                    {loading ? "Decrypting Signals..." : "No Active Signals Found"}
                   </div>
                 )}
               </div>
@@ -300,8 +329,10 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
       </AnimatePresence>
 
       <style>{`
-        .animate-spin-slow { animation: spin 8s linear infinite; }
+        .animate-spin-slow { animation: spin 12s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        input[type='range'] { -webkit-appearance: none; background: rgba(255,255,255,0.05); }
+        input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #00FFB3; cursor: pointer; }
       `}</style>
     </motion.div>
   );

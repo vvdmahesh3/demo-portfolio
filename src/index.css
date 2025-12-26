@@ -834,3 +834,25 @@ html.lenis {
 .animate-aura {
   animation: logo-aura 2s ease-in-out infinite;
 }
+/* Custom Cinematic Scrollbar for Music Results */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 255, 179, 0.02);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #00FFB3;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 255, 179, 0.5);
+}
+
+/* Chromatic Aberration Animation for Song Transitions */
+@keyframes chromatic-hit {
+  0% { filter: none; transform: scale(1); }
+  10% { filter: drop-shadow(2px 0 red) drop-shadow(-2px 0 blue); transform: scale(1.02); }
+  100% { filter: none; transform: scale(1); }
+}
+.animate-hit {
+  animation: chromatic-hit 0.4s ease-out;
+}
