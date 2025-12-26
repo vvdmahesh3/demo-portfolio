@@ -62,9 +62,9 @@ const About: React.FC = () => {
             </div>
             
             <h2 className="text-6xl lg:text-8xl font-black tracking-tighter uppercase mb-6 leading-[0.9]">
-              SYSTEMS <br /> 
+              V V D <br /> 
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-[#00FFB3] dark:to-cyan-400">
-                DRIVEN BY <br /> RESILIENCE.
+                MAHESH <br /> PERURI.
               </span>
             </h2>
             
