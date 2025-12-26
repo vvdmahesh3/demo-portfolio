@@ -1,14 +1,15 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import ProximityText from "./ProximityText";
-import { Github, Linkedin, Mail, MousePointer2 } from "lucide-react";
 import WithText from "./WithText";
+import { Github, Linkedin, Mail, MousePointer2 } from "lucide-react";
 
 export default function Hero() {
   const [showScrollIcon, setShowScrollIcon] = useState(false);
   const [showHint, setShowHint] = useState(false);
 
   useEffect(() => {
-    // Show hint after 1.5s, hide after 8s
     const hintTimer = setTimeout(() => setShowHint(true), 1500);
     const hideHintTimer = setTimeout(() => setShowHint(false), 8000);
     const scrollTimer = setTimeout(() => setShowScrollIcon(true), 3000);
@@ -28,26 +29,46 @@ export default function Hero() {
       id="home"
       className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden px-4 text-center bg-white dark:bg-black transition-colors duration-700"
     >
-      {/* --- PIXEL-PERFECT LOGO HINT --- */}
-      {/* Adjusted top and left to perfectly center on the "M" logo */}
-      <div className="absolute top-5 left-8 z-50 pointer-events-none">
-        {showHint && (
-          <div className="flex flex-col items-center gap-1.5">
-            {/* The Aura Glow - perfectly sized to the logo square */}
-            <div className="w-11 h-11 rounded-xl animate-aura bg-green-500/5 border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]" />
-            
-            {/* The Minimalist Tooltip - cleaned up width and padding */}
-            <div className="flex items-center gap-2 bg-black/90 dark:bg-zinc-900 border border-white/10 dark:border-green-500/30 px-2.5 py-1 rounded-full backdrop-blur-md animate-in fade-in zoom-in slide-in-from-top-1 duration-700 shadow-2xl">
+      {/* ======================================================
+          TOP-LEFT LOGO : PIXEL-PERFECT M + BORDER + TOOLTIP
+      ====================================================== */}
+      <div className="absolute top-6 left-6 z-50">
+        <div className="relative w-11 h-11 flex items-center justify-center">
+          {/* Glow / Border */}
+          {showHint && (
+            <div
+              className="absolute inset-0 rounded-xl border border-green-500/30
+                         shadow-[0_0_18px_rgba(34,197,94,0.35)]
+                         animate-aura pointer-events-none"
+            />
+          )}
+
+          {/* M Logo */}
+          <span className="relative z-10 text-green-400 font-extrabold text-xl select-none">
+            M
+          </span>
+
+          {/* Tooltip */}
+          {showHint && (
+            <div
+              className="absolute -bottom-7 left-1/2 -translate-x-1/2
+                         flex items-center gap-2
+                         bg-black/90 dark:bg-zinc-900
+                         border border-green-500/30
+                         px-2.5 py-1 rounded-full backdrop-blur-md
+                         shadow-2xl animate-in fade-in zoom-in slide-in-from-top-1
+                         duration-700 whitespace-nowrap"
+            >
               <MousePointer2 className="w-2.5 h-2.5 text-green-400" />
-              <span className="text-[7px] uppercase tracking-[0.15em] text-green-400 font-bold whitespace-nowrap">
+              <span className="text-[7px] tracking-[0.15em] uppercase text-green-400 font-bold">
                 Initialize System
               </span>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Top Marquee */}
+      {/* ================= TOP MARQUEE ================= */}
       <div className="w-full overflow-hidden pt-8">
         <div className="flex animate-marqueeLeft whitespace-nowrap will-change-transform">
           <span className="text-[10.5vw] font-extrabold text-[#111111] dark:text-green-400 opacity-50 leading-none pr-12">
@@ -59,8 +80,9 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Center Proximity Text */}
+      {/* ================= CENTER TEXT ================= */}
       <div className="h-8" />
+
       <div className="z-10">
         <ProximityText
           text="I BUILD THE FUTURE"
@@ -68,39 +90,39 @@ export default function Hero() {
         />
       </div>
 
-      {/* WithText Animation */}
+      {/* ================= SUB TEXT ================= */}
       <div className="mt-6">
         <WithText />
       </div>
 
-      {/* Social Icons */}
+      {/* ================= SOCIAL ICONS ================= */}
       <div className="flex gap-8 mt-10 z-10">
         <a
           href="https://github.com/vvdmahesh3"
           target="_blank"
           rel="noopener noreferrer"
-          className="relative group"
+          className="group"
         >
-          <Github className="w-8 h-8 text-black dark:text-white group-hover:text-accent transition-colors duration-300" />
+          <Github className="w-8 h-8 text-black dark:text-white group-hover:text-green-400 transition-colors duration-300" />
         </a>
 
         <a
           href="https://www.linkedin.com/in/vvdmahesh362006/"
           target="_blank"
           rel="noopener noreferrer"
-          className="relative group"
+          className="group"
         >
           <Linkedin className="w-8 h-8 text-black dark:text-white group-hover:text-[#0A66C2] transition-colors duration-300" />
         </a>
 
-        <a href="mailto:immahesh300@gmail.com" className="relative group">
-          <Mail className="w-8 h-8 text-black dark:text-white group-hover:text-accent transition-colors duration-300" />
+        <a href="mailto:immahesh300@gmail.com" className="group">
+          <Mail className="w-8 h-8 text-black dark:text-white group-hover:text-green-400 transition-colors duration-300" />
         </a>
       </div>
 
       <div className="h-8" />
 
-      {/* Bottom Marquee */}
+      {/* ================= BOTTOM MARQUEE ================= */}
       <div className="w-full overflow-hidden pb-8">
         <div className="flex animate-marqueeRight whitespace-nowrap will-change-transform">
           <span className="text-[10.5vw] font-extrabold text-[#111111] dark:text-green-400 opacity-50 leading-none pr-12">
@@ -112,14 +134,14 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Scroll Indicator */}
+      {/* ================= SCROLL INDICATOR ================= */}
       {showScrollIcon && (
         <a
           href="#about"
           className="absolute bottom-12 flex flex-col items-center justify-center z-10 cursor-pointer"
         >
           <div className="relative flex items-center justify-center">
-            <div className="absolute w-12 h-12 rounded-full border-2 border-accent animate-pulse-glow" />
+            <div className="absolute w-12 h-12 rounded-full border-2 border-green-400 animate-pulse-glow" />
             <span className="text-black dark:text-white text-2xl animate-bounce">
               ↓
             </span>
