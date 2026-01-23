@@ -150,7 +150,7 @@ const About: React.FC = () => {
           <div className="h-1 w-24 bg-blue-600 dark:bg-[#00FFB3] mx-auto rounded-full shadow-[0_0_20px_#00FFB3]" />
           
           <div className="mt-20 font-mono text-[10px] uppercase tracking-[0.5em] text-zinc-400 animate-pulse">
-            Mahesh V V D
+            "YOUR NEXT MOVE MATTERS MORE THAN YOUR LAST MISTAKE..!
           </div>
         </motion.div>
       </div>
