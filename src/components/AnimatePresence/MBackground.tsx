@@ -8,14 +8,16 @@ import {
   SkipBack,
   SkipForward,
   Search,
-  X,
   Loader2,
+  Music,
+  ChevronRight,
   Volume2,
 } from "lucide-react";
 
 interface LabProps {
   onClose: () => void;
 }
+
 interface Song {
   id: string;
   title: string;
@@ -26,8 +28,6 @@ interface Song {
 const API_URL = "https://mahesh-backend-hub.onrender.com";
 
 export default function MBackground({ onClose }: LabProps) {
-  const playerRef = useRef<any>(null);
-
   const [isPlaying, setIsPlaying] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -35,285 +35,273 @@ export default function MBackground({ onClose }: LabProps) {
   const [loading, setLoading] = useState(false);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [volume, setVolume] = useState(70);
+  const [progress, setProgress] = useState(0);
 
-  /* -------------------- YouTube Engine -------------------- */
+  const playerRef = useRef<any>(null);
+
+  // ---------------- SEARCH ----------------
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (query.length > 2) performSearch();
+    }, 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  const performSearch = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${API_URL}/api/music-search?q=${encodeURIComponent(query)}`
+      );
+      const data = await res.json();
+      setResults(data);
+    } catch {
+      console.error("Search failed");
+    }
+    setLoading(false);
+  };
+
+  // ---------------- YOUTUBE PLAYER ----------------
   useEffect(() => {
     if (!(window as any).YT) {
       const tag = document.createElement("script");
       tag.src = "https://www.youtube.com/iframe_api";
       document.body.appendChild(tag);
     }
+
     (window as any).onYouTubeIframeAPIReady = () => {
       playerRef.current = new (window as any).YT.Player("yt-instance", {
         height: "0",
         width: "0",
         playerVars: { controls: 0 },
         events: {
-          onStateChange: (e: any) => setIsPlaying(e.data === 1),
-          onReady: (e: any) => e.target.setVolume(volume),
+          onStateChange: (e: any) => {
+            setIsPlaying(e.data === 1);
+          },
         },
       });
     };
   }, []);
 
-  /* -------------------- Search -------------------- */
+  // ---------------- PROGRESS TRACK ----------------
   useEffect(() => {
-    if (!query.trim()) return;
-    const t = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `${API_URL}/api/music-search?q=${encodeURIComponent(query)}`
-        );
-        const data = await res.json();
-        setResults(data);
-      } catch {
-        setResults([]);
-      }
-      setLoading(false);
-    }, 300);
-    return () => clearTimeout(t);
-  }, [query]);
+    const timer = setInterval(() => {
+      if (!playerRef.current) return;
+      const duration = playerRef.current.getDuration?.() || 1;
+      const current = playerRef.current.getCurrentTime?.() || 0;
+      setProgress((current / duration) * 100);
+    }, 500);
 
-  const playSong = (song: Song) => {
-    setCurrentSong(song);
-    playerRef.current?.loadVideoById(song.id);
-    setSearchOpen(false);
-  };
+    return () => clearInterval(timer);
+  }, []);
 
+  // ---------------- UI ----------------
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-[300] bg-[#060707] text-white overflow-hidden"
+      className="fixed inset-0 bg-[#050505] text-white overflow-hidden flex items-center justify-center"
     >
       <div id="yt-instance" className="hidden" />
 
-      {/* 🌌 Background */}
+      {/* Ambient Glow */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,179,0.15),transparent_60%)]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black/90" />
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-[#00ffb3]/10 blur-[160px] rounded-full" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[#00ffb3]/5 blur-[140px] rounded-full" />
       </div>
 
-      {/* ❌ Close */}
-      <button
-        onClick={onClose}
-        className="absolute top-6 right-6 z-50 w-12 h-12 rounded-full bg-white/5 hover:bg-red-500/20 flex items-center justify-center transition"
-      >
-        <X />
-      </button>
-
-      {/* 🎧 CENTER BRAND */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center gap-10 pointer-events-none">
-        <h1 className="text-[10vw] font-extrabold tracking-tight leading-none opacity-[0.06]">
-          MAHESH
+      {/* Hero Title */}
+      <div className="absolute top-24 text-center pointer-events-none">
+        <h1 className="text-[10vw] font-extrabold tracking-tight text-white/5">
+          MUSIC HUB
         </h1>
+        <p className="text-[11px] tracking-[0.4em] text-[#00ffb3]/60 mt-2">
+          v2.0 INTERFACE ACTIVE
+        </p>
       </div>
 
-      {/* 🎚 PLAYER DOCK */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[92%] max-w-6xl z-40">
-        <div className="relative flex items-center gap-6 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[28px] px-6 py-4 shadow-2xl">
-
-          {/* 🎵 Meta */}
-          <div className="flex items-center gap-4 min-w-[260px]">
-            <div className="w-14 h-14 rounded-xl overflow-hidden border border-white/10 bg-white/5">
-              {currentSong ? (
-                <img
-                  src={currentSong.banner}
-                  className="w-full h-full object-cover"
-                />
-              ) : null}
-            </div>
-            <div className="leading-tight">
-              <p className="text-sm font-semibold tracking-wide truncate max-w-[220px]">
-                {currentSong?.title || "Select a track"}
-              </p>
-              <p className="text-xs text-emerald-400 opacity-80 truncate">
-                {currentSong?.artist || "Awaiting signal"}
-              </p>
-            </div>
-          </div>
-
-          {/* ▶ Controls */}
-          <div className="flex items-center gap-8 mx-auto">
-            <button
-              onClick={() =>
-                playerRef.current?.seekTo(
-                  playerRef.current.getCurrentTime() - 10
-                )
-              }
-              className="icon-btn"
-            >
-              <SkipBack size={20} />
-            </button>
-
-            <button
-              onClick={() =>
-                isPlaying
-                  ? playerRef.current.pauseVideo()
-                  : playerRef.current.playVideo()
-              }
-              className={`play-btn ${isPlaying ? "pulse" : ""}`}
-            >
-              {isPlaying ? <Pause /> : <Play className="ml-1" />}
-            </button>
-
-            <button
-              onClick={() =>
-                playerRef.current?.seekTo(
-                  playerRef.current.getCurrentTime() + 10
-                )
-              }
-              className="icon-btn"
-            >
-              <SkipForward size={20} />
-            </button>
-          </div>
-
-          {/* 🔊 Volume */}
-          <div className="flex items-center gap-2 w-40">
-            <Volume2 size={16} className="text-emerald-400" />
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={volume}
-              onChange={(e) => {
-                const v = parseInt(e.target.value);
-                setVolume(v);
-                playerRef.current?.setVolume(v);
-              }}
-              className="flex-1 accent-emerald-400"
+      {/* PLAYER BAR */}
+      <div className="absolute bottom-8 w-full max-w-6xl px-6 z-50">
+        <div className="relative bg-black/50 backdrop-blur-3xl border border-white/10 rounded-[32px] p-5 shadow-2xl">
+          {/* Progress */}
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
+            <motion.div
+              animate={{ width: `${progress}%` }}
+              className="h-full bg-[#00ffb3]"
             />
           </div>
 
-          {/* 🔍 Search */}
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="ml-4 w-14 h-14 rounded-full bg-emerald-400 text-black flex items-center justify-center hover:scale-110 transition"
-          >
-            <Search />
-          </button>
+          <div className="flex items-center justify-between gap-6">
+            {/* SONG META */}
+            <div className="flex items-center gap-5 min-w-[300px]">
+              <motion.div
+                animate={isPlaying ? { scale: 1.05 } : { scale: 1 }}
+                className="w-16 h-16 rounded-xl overflow-hidden bg-white/10"
+              >
+                {currentSong ? (
+                  <img
+                    src={currentSong.banner}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Music className="opacity-30" />
+                  </div>
+                )}
+              </motion.div>
+
+              <div className="overflow-hidden">
+                <motion.div
+                  className="text-sm font-semibold whitespace-nowrap"
+                  animate={{
+                    x:
+                      (currentSong?.title?.length ?? 0) > 22
+                        ? ["0%", "-40%"]
+                        : 0,
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 8,
+                    ease: "linear",
+                  }}
+                >
+                  {currentSong?.title || "No Track Selected"}
+                </motion.div>
+                <p className="text-xs text-[#00ffb3]/70 mt-1">
+                  {currentSong?.artist || "Awaiting Signal"}
+                </p>
+              </div>
+            </div>
+
+            {/* CONTROLS */}
+            <div className="flex items-center gap-8">
+              <button
+                onClick={() =>
+                  playerRef.current?.seekTo(
+                    playerRef.current.getCurrentTime() - 10
+                  )
+                }
+                className="opacity-40 hover:opacity-100 transition"
+              >
+                <SkipBack />
+              </button>
+
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() =>
+                  isPlaying
+                    ? playerRef.current.pauseVideo()
+                    : playerRef.current.playVideo()
+                }
+                className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center shadow-xl"
+              >
+                {isPlaying ? <Pause /> : <Play className="ml-1" />}
+              </motion.button>
+
+              <button
+                onClick={() =>
+                  playerRef.current?.seekTo(
+                    playerRef.current.getCurrentTime() + 10
+                  )
+                }
+                className="opacity-40 hover:opacity-100 transition"
+              >
+                <SkipForward />
+              </button>
+            </div>
+
+            {/* VOLUME + SEARCH */}
+            <div className="flex items-center gap-5">
+              <div className="flex items-center gap-2 text-xs text-white/60">
+                <Volume2 size={16} />
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={volume}
+                  onChange={(e) => {
+                    setVolume(+e.target.value);
+                    playerRef.current?.setVolume(+e.target.value);
+                  }}
+                />
+              </div>
+
+              <button
+                onClick={() => setSearchOpen(!searchOpen)}
+                className="w-12 h-12 rounded-full bg-[#00ffb3] text-black flex items-center justify-center"
+              >
+                <Search />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 🔍 SEARCH DRAWER */}
+      {/* SEARCH PANEL */}
       <AnimatePresence>
         {searchOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 40 }}
-            className="absolute inset-0 z-[200] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6"
+            exit={{ opacity: 0, y: 30 }}
+            className="absolute bottom-36 right-10 w-[420px] max-h-[520px] bg-black/80 backdrop-blur-3xl border border-white/10 rounded-3xl overflow-hidden"
           >
-            <div className="w-full max-w-4xl h-[70vh] rounded-[32px] border border-white/10 bg-[#0b0c0c] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="sticky top-0 bg-black/90 p-4 border-b border-white/10">
+              <input
+                autoFocus
+                placeholder="Search music..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full bg-transparent outline-none text-sm"
+              />
+            </div>
 
-              {/* Search Header */}
-              <div className="p-6 border-b border-white/10 flex gap-4 sticky top-0 bg-[#0b0c0c] z-10">
-                <input
-                  autoFocus
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search songs, artists..."
-                  className="flex-1 bg-white/5 rounded-xl px-4 py-3 outline-none text-sm"
-                />
-                <button
-                  onClick={() => setSearchOpen(false)}
-                  className="px-4 rounded-xl bg-white/5 hover:bg-white/10"
+            {/* Results */}
+            <div className="max-h-[440px] overflow-y-auto custom-scrollbar p-3">
+              {loading && (
+                <div className="flex justify-center p-6">
+                  <Loader2 className="animate-spin text-[#00ffb3]" />
+                </div>
+              )}
+
+              {results.map((song) => (
+                <motion.div
+                  key={song.id}
+                  whileHover={{ backgroundColor: "rgba(0,255,179,0.06)" }}
+                  onClick={() => {
+                    setCurrentSong(song);
+                    playerRef.current.loadVideoById(song.id);
+                    setSearchOpen(false);
+                  }}
+                  className="flex items-center gap-4 p-3 rounded-xl cursor-pointer"
                 >
-                  <X />
-                </button>
-              </div>
-
-              {/* Results */}
-              <div className="flex-1 overflow-y-auto custom-scroll p-4 space-y-3">
-                {loading && (
-                  <div className="text-center py-10 opacity-40">
-                    <Loader2 className="animate-spin inline" />
+                  <img
+                    src={song.banner}
+                    className="w-12 h-12 rounded-lg object-cover"
+                  />
+                  <div className="flex-1 overflow-hidden">
+                    <p className="text-sm truncate">{song.title}</p>
+                    <p className="text-xs text-white/40 truncate">
+                      {song.artist}
+                    </p>
                   </div>
-                )}
-
-                {!loading &&
-                  results.map((song) => (
-                    <motion.div
-                      key={song.id}
-                      whileHover={{ scale: 1.01 }}
-                      onClick={() => playSong(song)}
-                      className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-emerald-400/10 cursor-pointer transition"
-                    >
-                      <img
-                        src={song.banner}
-                        className="w-20 h-12 rounded-md object-cover"
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium leading-snug">
-                          {song.title}
-                        </p>
-                        <p className="text-xs text-white/50">
-                          {song.artist}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
-
-                {!loading && results.length === 0 && query && (
-                  <div className="text-center py-16 text-white/30 text-sm">
-                    No results found
-                  </div>
-                )}
-              </div>
+                  <ChevronRight className="opacity-30" />
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Styles */}
+      {/* Scrollbar Style */}
       <style>{`
-        .icon-btn {
-          width: 42px;
-          height: 42px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.08);
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          transition: .3s;
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
         }
-        .icon-btn:hover {
-          background: rgba(255,255,255,0.18);
-          transform: scale(1.1);
-        }
-
-        .play-btn {
-          width:72px;
-          height:72px;
-          border-radius:50%;
-          background:#34f5c5;
-          color:black;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          box-shadow:0 0 40px rgba(52,245,197,.4);
-          transition:.3s;
-        }
-        .play-btn:hover {
-          transform: scale(1.08);
-        }
-        .pulse {
-          animation:pulse 1.6s infinite;
-        }
-        @keyframes pulse {
-          0% { box-shadow:0 0 0 0 rgba(52,245,197,.6);}
-          70% { box-shadow:0 0 0 25px rgba(52,245,197,0);}
-          100% { box-shadow:0 0 0 0 rgba(52,245,197,0);}
-        }
-
-        .custom-scroll::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb {
-          background: rgba(52,245,197,.6);
-          border-radius: 20px;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #00ffb3;
+          border-radius: 10px;
         }
       `}</style>
     </motion.div>
