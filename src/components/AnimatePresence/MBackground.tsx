@@ -36,6 +36,7 @@ export default function MBackground({ onClose }: LabProps) {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [volume, setVolume] = useState(70);
   const [progress, setProgress] = useState(0);
+  const [bgHue, setBgHue] = useState(180);
 
   const playerRef = useRef<any>(null);
 
@@ -95,7 +96,39 @@ export default function MBackground({ onClose }: LabProps) {
     return () => clearInterval(timer);
   }, []);
 
-  // ---------------- UI ----------------
+  // ---------------- KEYBOARD SHORTCUTS ----------------
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        isPlaying
+          ? playerRef.current?.pauseVideo()
+          : playerRef.current?.playVideo();
+      }
+      if (e.code === "ArrowRight") {
+        playerRef.current?.seekTo(
+          playerRef.current.getCurrentTime() + 10
+        );
+      }
+      if (e.code === "ArrowLeft") {
+        playerRef.current?.seekTo(
+          playerRef.current.getCurrentTime() - 10
+        );
+      }
+      if (e.code === "Escape") {
+        setSearchOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [isPlaying]);
+
+  // ---------------- COLOR SHIFT FROM SONG ----------------
+  useEffect(() => {
+    if (!currentSong) return;
+    setBgHue(Math.floor(Math.random() * 360));
+  }, [currentSong]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -104,27 +137,46 @@ export default function MBackground({ onClose }: LabProps) {
     >
       <div id="yt-instance" className="hidden" />
 
-      {/* Ambient Glow */}
-      <div className="absolute inset-0">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-[#00ffb3]/10 blur-[160px] rounded-full" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[#00ffb3]/5 blur-[140px] rounded-full" />
-      </div>
+      {/* Dynamic Ambient Background */}
+      <motion.div
+        animate={{ background: `radial-gradient(circle at center, hsla(${bgHue},80%,60%,0.18), transparent 70%)` }}
+        className="absolute inset-0 transition-all duration-1000"
+      />
 
-      {/* Hero Title */}
+      {/* Floating Particles */}
+      {[...Array(30)].map((_, i) => (
+        <motion.div
+          key={i}
+          animate={{
+            y: ["0%", "120%"],
+            opacity: [0, 0.4, 0],
+          }}
+          transition={{
+            duration: 10 + Math.random() * 10,
+            repeat: Infinity,
+            delay: Math.random() * 5,
+          }}
+          className="absolute w-[2px] h-[40px] bg-[#00ffb3]/20 blur-sm left-[random]"
+          style={{ left: `${Math.random() * 100}%` }}
+        />
+      ))}
+
+      {/* Hero */}
       <div className="absolute top-24 text-center pointer-events-none">
-        <h1 className="text-[10vw] font-extrabold tracking-tight text-white/5">
+        <h1 className="text-[9vw] font-extrabold tracking-tight text-white/5">
           MUSIC HUB
         </h1>
-        <p className="text-[11px] tracking-[0.4em] text-[#00ffb3]/60 mt-2">
-          v2.0 INTERFACE ACTIVE
+        <p className="text-[11px] tracking-[0.5em] text-[#00ffb3]/70">
+          FUTURE AUDIO INTERFACE
         </p>
       </div>
 
       {/* PLAYER BAR */}
       <div className="absolute bottom-8 w-full max-w-6xl px-6 z-50">
-        <div className="relative bg-black/50 backdrop-blur-3xl border border-white/10 rounded-[32px] p-5 shadow-2xl">
+        <div className="relative bg-black/55 backdrop-blur-3xl border border-white/10 rounded-[34px] p-6 shadow-2xl">
+
           {/* Progress */}
-          <div className="absolute top-0 left-0 w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-[3px] bg-white/10 overflow-hidden">
             <motion.div
               animate={{ width: `${progress}%` }}
               className="h-full bg-[#00ffb3]"
@@ -132,17 +184,15 @@ export default function MBackground({ onClose }: LabProps) {
           </div>
 
           <div className="flex items-center justify-between gap-6">
+
             {/* SONG META */}
-            <div className="flex items-center gap-5 min-w-[300px]">
+            <div className="flex items-center gap-5 min-w-[280px]">
               <motion.div
-                animate={isPlaying ? { scale: 1.05 } : { scale: 1 }}
+                animate={isPlaying ? { scale: 1.08, boxShadow: "0 0 25px rgba(0,255,179,0.6)" } : {}}
                 className="w-16 h-16 rounded-xl overflow-hidden bg-white/10"
               >
                 {currentSong ? (
-                  <img
-                    src={currentSong.banner}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={currentSong.banner} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Music className="opacity-30" />
@@ -165,10 +215,10 @@ export default function MBackground({ onClose }: LabProps) {
                     ease: "linear",
                   }}
                 >
-                  {currentSong?.title || "No Track Selected"}
+                  {currentSong?.title || "Select a track"}
                 </motion.div>
                 <p className="text-xs text-[#00ffb3]/70 mt-1">
-                  {currentSong?.artist || "Awaiting Signal"}
+                  {currentSong?.artist || "Waiting signal"}
                 </p>
               </div>
             </div>
@@ -211,7 +261,7 @@ export default function MBackground({ onClose }: LabProps) {
             </div>
 
             {/* VOLUME + SEARCH */}
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 text-xs text-white/60">
                 <Volume2 size={16} />
                 <input
@@ -226,13 +276,32 @@ export default function MBackground({ onClose }: LabProps) {
                 />
               </div>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
                 onClick={() => setSearchOpen(!searchOpen)}
                 className="w-12 h-12 rounded-full bg-[#00ffb3] text-black flex items-center justify-center"
               >
                 <Search />
-              </button>
+              </motion.button>
             </div>
+          </div>
+
+          {/* Mini Waveform */}
+          <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-[3px] opacity-40">
+            {[...Array(40)].map((_, i) => (
+              <motion.div
+                key={i}
+                animate={{
+                  height: isPlaying ? [4, Math.random() * 30 + 5, 4] : 4,
+                }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 0.6,
+                  delay: i * 0.02,
+                }}
+                className="w-[2px] bg-[#00ffb3]"
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -246,7 +315,6 @@ export default function MBackground({ onClose }: LabProps) {
             exit={{ opacity: 0, y: 30 }}
             className="absolute bottom-36 right-10 w-[420px] max-h-[520px] bg-black/80 backdrop-blur-3xl border border-white/10 rounded-3xl overflow-hidden"
           >
-            {/* Header */}
             <div className="sticky top-0 bg-black/90 p-4 border-b border-white/10">
               <input
                 autoFocus
@@ -257,7 +325,6 @@ export default function MBackground({ onClose }: LabProps) {
               />
             </div>
 
-            {/* Results */}
             <div className="max-h-[440px] overflow-y-auto custom-scrollbar p-3">
               {loading && (
                 <div className="flex justify-center p-6">
@@ -294,10 +361,9 @@ export default function MBackground({ onClose }: LabProps) {
         )}
       </AnimatePresence>
 
-      {/* Scrollbar Style */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
-          width: 5px;
+          width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: #00ffb3;
