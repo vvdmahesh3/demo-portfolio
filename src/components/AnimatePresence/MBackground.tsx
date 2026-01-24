@@ -205,7 +205,7 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
         )}
       </AnimatePresence>
 
-      <style jsx>{`
+      <style>{`
         .main-outline { -webkit-text-stroke: 1px rgba(255,255,255,0.4); }
         .neon-stroke { 
             -webkit-text-stroke: 2px #00FFB3; 
