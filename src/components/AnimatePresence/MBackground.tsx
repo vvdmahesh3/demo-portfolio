@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, Search, X, 
-  Loader2, Music, Sparkles, ChevronRight, Disc, Activity, Terminal, Cpu, Zap
+  Loader2, Music, Sparkles, ChevronRight, Disc, Activity, Zap
 } from "lucide-react";
 
 interface LabProps { onClose: () => void; }
@@ -19,23 +19,18 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
   const [volume, setVolume] = useState(70);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
-  const [systemStatus, setSystemStatus] = useState("INITIALIZING");
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const playerRef = useRef<any>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const API_URL = "https://mahesh-backend-hub.onrender.com";
 
   useEffect(() => {
-    const sequence = ["CORE_LOADED", "MAHESH_VVD_OS", "NEURAL_LINK_OK", "READY"];
-    sequence.forEach((msg, i) => setTimeout(() => setSystemStatus(msg), i * 800));
-    
     const handleMouseMove = (e: MouseEvent) => setMousePos({ x: e.clientX, y: e.clientY });
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // YouTube API Logic (Kept from your previous working code)
+  // YouTube Engine
   useEffect(() => {
     if (!(window as any).YT) {
       const tag = document.createElement("script");
@@ -69,159 +64,164 @@ const MBackground: React.FC<LabProps> = ({ onClose }) => {
   return (
     <motion.div 
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] bg-[#080808] overflow-hidden flex flex-col items-center justify-center font-sans"
+      className="fixed inset-0 z-[200] bg-[#050505] overflow-hidden flex flex-col items-center justify-center font-sans"
     >
       <div id="yt-player-instance" className="absolute invisible" />
-      
-      {/* --- THE BACKGROUND BRANDING (GROK STYLE) --- */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0">
+
+      {/* --- RECTIVE GROK-STYLE BACKGROUND --- */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+        <div className="relative group">
+            {/* The base outline name */}
+            <h1 className="text-[14vw] font-black tracking-tighter leading-none text-transparent grok-base-outline opacity-20">
+                MAHESH VVD
+            </h1>
+            
+            {/* The Glowing Layer (Masked by Mouse) */}
+            <h1 
+                className="absolute top-0 left-0 text-[14vw] font-black tracking-tighter leading-none text-transparent grok-glow-outline select-none"
+                style={{
+                    maskImage: `radial-gradient(circle 250px at ${mousePos.x}px ${mousePos.y}px, black 0%, transparent 100%)`,
+                    WebkitMaskImage: `radial-gradient(circle 250px at ${mousePos.x}px ${mousePos.y}px, black 0%, transparent 100%)`
+                }}
+            >
+                MAHESH VVD
+            </h1>
+
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="text-center -mt-6"
+            >
+                <span className="text-white/10 text-4xl md:text-6xl font-black italic tracking-widest uppercase">PERURI</span>
+            </motion.div>
+        </div>
+      </div>
+
+      {/* --- TOP NAV --- */}
+      <div className="absolute top-0 w-full p-10 flex justify-between items-center z-50">
+         <div className="flex items-center gap-4">
+            <div className="h-[1px] w-12 bg-gradient-to-r from-[#00FFB3] to-transparent" />
+            <span className="font-mono text-[10px] text-[#00FFB3] tracking-[0.5em] uppercase animate-pulse">System Active</span>
+         </div>
+         <button onClick={onClose} className="group p-4 rounded-full bg-white/5 hover:bg-red-500/20 transition-all border border-white/10">
+            <X size={20} className="text-white/40 group-hover:text-red-500 transition-colors" />
+         </button>
+      </div>
+
+      {/* --- DYNAMIC GLASS PLAYER --- */}
+      <div className="absolute bottom-12 w-full flex justify-center px-6 z-50">
         <motion.div 
-          className="relative flex flex-col items-center"
-          animate={{
-            x: (mousePos.x - (typeof window !== 'undefined' ? window.innerWidth / 2 : 0)) * 0.02,
-            y: (mousePos.y - (typeof window !== 'undefined' ? window.innerHeight / 2 : 0)) * 0.02,
-          }}
+            layout
+            className="relative flex items-center gap-8 bg-white/[0.03] backdrop-blur-3xl border border-white/10 p-4 pl-8 pr-4 rounded-[100px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
         >
-          {/* Main Large Outline Name */}
-          <h1 className="text-[12vw] font-light tracking-[-0.05em] leading-none text-transparent grok-outline opacity-30">
-            MAHESH VVD
-          </h1>
-          <h1 className="text-[8vw] font-black tracking-tighter leading-none text-white/5 -mt-10 italic uppercase">
-            PERURI
-          </h1>
-          
-          {/* Subtle Dynamic Glow following mouse */}
-          <div 
-            className="absolute w-[600px] h-[600px] rounded-full blur-[160px] opacity-10 pointer-events-none"
-            style={{
-              background: `radial-gradient(circle, #00FFB3 0%, transparent 70%)`,
-              left: mousePos.x - 300,
-              top: mousePos.y - 300,
-              position: 'fixed'
-            }}
-          />
+            {/* Play/Pause Main Trigger */}
+            <button 
+                onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()}
+                className="relative w-16 h-16 rounded-full bg-white flex items-center justify-center text-black shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+            >
+                {isPlaying ? <Pause size={28} fill="black" /> : <Play size={28} fill="black" className="ml-1" />}
+                {isPlaying && <span className="absolute inset-0 rounded-full border border-white animate-ping opacity-20" />}
+            </button>
+
+            {/* Song Info Section */}
+            <div className="flex flex-col min-w-[180px]">
+                <h4 className="text-xs font-black text-white uppercase tracking-wider truncate w-40">
+                    {currentSong ? currentSong.title : "SELECT FREQUENCY"}
+                </h4>
+                <p className="text-[10px] text-[#00FFB3] font-mono mt-1 opacity-60">
+                    {currentSong ? currentSong.artist : "AWAITING SIGNAL"}
+                </p>
+            </div>
+
+            {/* Frequency Visualizer (Pure CSS) */}
+            <div className="flex items-end gap-1 h-8 px-4 opacity-40">
+                {[...Array(8)].map((_, i) => (
+                    <motion.div 
+                        key={i}
+                        animate={{ height: isPlaying ? [10, 32, 12, 28, 10] : 4 }}
+                        transition={{ repeat: Infinity, duration: 0.5 + Math.random(), ease: "easeInOut" }}
+                        className="w-[3px] bg-white rounded-full"
+                    />
+                ))}
+            </div>
+
+            {/* Floating Search Toggle */}
+            <button 
+                onClick={() => setSearchOpen(true)}
+                className="w-16 h-16 rounded-full bg-[#00FFB3] flex items-center justify-center text-black group hover:scale-110 transition-transform"
+            >
+                <Search size={24} className="group-hover:rotate-12 transition-transform" />
+            </button>
         </motion.div>
       </div>
 
-      {/* --- MINIMAL HUD TOP --- */}
-      <div className="absolute top-0 left-0 w-full p-8 flex justify-between items-start z-50 pointer-events-none">
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-xl flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-[#00FFB3] text-[9px] font-mono tracking-widest">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#00FFB3] animate-pulse" />
-            SYS_STATUS: {systemStatus}
-          </div>
-          <div className="text-white/20 text-[8px] font-mono">LOCATION: HYD_IN // 17.3850° N</div>
-        </div>
-        
-        <button 
-          onClick={onClose} 
-          className="pointer-events-auto p-4 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-red-500 hover:bg-red-500/10 transition-all"
-        >
-          <X size={20} />
-        </button>
-      </div>
-
-      {/* --- FLOATING MUSIC CONTROLLER (DOCK) --- */}
-      <div className="absolute bottom-10 w-full max-w-4xl px-6 z-50">
-        <div className="bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[40px] p-4 flex items-center justify-between shadow-2xl">
-          {/* Left: Info */}
-          <div className="flex items-center gap-4 w-1/3">
-            {currentSong ? (
-              <>
-                <div className="w-14 h-14 rounded-2xl overflow-hidden border border-white/10">
-                  <img src={currentSong.banner} className="w-full h-full object-cover" alt="art" />
-                </div>
-                <div className="overflow-hidden">
-                  <h4 className="text-xs font-bold text-white truncate uppercase tracking-tight">{currentSong.title}</h4>
-                  <p className="text-[10px] text-[#00FFB3] font-mono mt-0.5">{currentSong.artist}</p>
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center gap-3 text-white/20 px-4">
-                <Music size={16} />
-                <span className="text-[10px] font-mono uppercase tracking-widest">Awaiting Audio</span>
-              </div>
-            )}
-          </div>
-
-          {/* Center: Controls */}
-          <div className="flex items-center gap-8">
-            <button onClick={() => playerRef.current?.seekTo(playerRef.current.getCurrentTime() - 10)} className="text-white/30 hover:text-white transition-colors"><SkipBack size={20} /></button>
-            <motion.button 
-              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-              onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()}
-              className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center"
-            >
-              {isPlaying ? <Pause size={24} fill="black" /> : <Play size={24} fill="black" className="ml-1" />}
-            </motion.button>
-            <button onClick={() => playerRef.current?.seekTo(playerRef.current.getCurrentTime() + 10)} className="text-white/30 hover:text-white transition-colors"><SkipForward size={20} /></button>
-          </div>
-
-          {/* Right: Search Toggle */}
-          <div className="flex justify-end items-center gap-4 w-1/3">
-             <div className="hidden md:flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5">
-                <Volume2 size={14} className="text-white/40" />
-                <input type="range" min="0" max="100" value={volume} onChange={(e) => { setVolume(parseInt(e.target.value)); playerRef.current?.setVolume(parseInt(e.target.value)); }} className="w-20 accent-[#00FFB3] h-[1px]" />
-             </div>
-             <button onClick={() => setSearchOpen(true)} className="p-4 rounded-full bg-[#00FFB3] text-black hover:brightness-110 transition-all">
-                <Search size={20} />
-             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* --- SEARCH OVERLAY --- */}
+      {/* --- DESIGNER SEARCH OVERLAY --- */}
       <AnimatePresence>
         {searchOpen && (
           <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-6"
+            initial={{ opacity: 0, backdropFilter: "blur(0px)" }} 
+            animate={{ opacity: 1, backdropFilter: "blur(40px)" }} 
+            exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+            className="absolute inset-0 z-[100] bg-black/80 flex flex-col items-center justify-center p-10"
           >
-            <div className="w-full max-w-2xl">
-              <div className="flex justify-between items-center mb-8">
-                <h3 className="text-[#00FFB3] font-mono text-xs tracking-[0.5em] uppercase">Search_Database</h3>
-                <button onClick={() => setSearchOpen(false)} className="text-white/40 hover:text-white"><X size={24} /></button>
-              </div>
-              <div className="flex gap-4 mb-8">
-                <input 
-                  autoFocus className="flex-1 bg-white/5 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-[#00FFB3]/50 font-mono"
-                  placeholder="Enter track or artist..." value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                />
-                <button onClick={handleSearch} className="bg-white text-black px-8 rounded-2xl font-bold uppercase text-xs tracking-widest">
-                  {loading ? <Loader2 className="animate-spin" /> : "Search"}
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 gap-2 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
-                {results.map((song) => (
-                  <div 
-                    key={song.id} onClick={() => { setCurrentSong(song); playerRef.current.loadVideoById(song.id); setSearchOpen(false); }}
-                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 cursor-pointer transition-all group"
-                  >
-                    <img src={song.banner} className="w-16 h-10 object-cover rounded-lg" alt="" />
-                    <div className="flex-1">
-                      <div className="text-sm font-bold text-white group-hover:text-[#00FFB3] transition-colors">{song.title}</div>
-                      <div className="text-[10px] text-white/40 uppercase tracking-widest">{song.artist}</div>
+            <div className="w-full max-w-4xl">
+                <div className="flex justify-between items-end mb-12 border-b border-white/10 pb-6">
+                    <div>
+                        <h2 className="text-white text-5xl font-black italic uppercase tracking-tighter">Music Hub</h2>
+                        <p className="text-[#00FFB3] font-mono text-[10px] tracking-[0.4em] mt-2">v2.0_INTERFACE_ACTIVE</p>
                     </div>
-                    <ChevronRight size={16} className="text-white/20" />
-                  </div>
-                ))}
-              </div>
+                    <button onClick={() => setSearchOpen(false)} className="text-white/20 hover:text-white mb-2 transition-colors"><X size={32} /></button>
+                </div>
+
+                <div className="relative mb-12 group">
+                    <input 
+                        autoFocus className="w-full bg-transparent border-b-2 border-white/10 p-6 text-4xl text-white outline-none focus:border-[#00FFB3] transition-all font-light placeholder:text-white/5"
+                        placeholder="Search for vibes..." value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    />
+                    <button onClick={handleSearch} className="absolute right-0 bottom-6 text-[#00FFB3] p-4 group-hover:scale-125 transition-transform">
+                        {loading ? <Loader2 className="animate-spin" /> : <ChevronRight size={40} />}
+                    </button>
+                </div>
+              
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[40vh] overflow-y-auto custom-scrollbar pr-4">
+                    {results.map((song) => (
+                    <motion.div 
+                        key={song.id} 
+                        whileHover={{ x: 10 }}
+                        onClick={() => { setCurrentSong(song); playerRef.current.loadVideoById(song.id); setSearchOpen(false); }}
+                        className="flex items-center gap-6 p-4 rounded-2xl bg-white/5 border border-transparent hover:border-[#00FFB3]/30 cursor-pointer transition-all group"
+                    >
+                        <div className="relative w-20 h-20 rounded-xl overflow-hidden shadow-2xl">
+                            <img src={song.banner} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Play size={20} fill="white" />
+                            </div>
+                        </div>
+                        <div className="flex-1">
+                            <div className="text-sm font-black text-white group-hover:text-[#00FFB3] transition-colors uppercase tracking-tight">{song.title}</div>
+                            <div className="text-[10px] text-white/30 uppercase tracking-widest mt-1 font-mono">{song.artist}</div>
+                        </div>
+                    </motion.div>
+                    ))}
+                </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <style>{`
-        .grok-outline {
-          -webkit-text-stroke: 1px rgba(255, 255, 255, 0.4);
+        .grok-base-outline {
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.1);
         }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-        input[type='range'] { -webkit-appearance: none; background: rgba(255,255,255,0.1); }
-        input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; height: 10px; width: 10px; border-radius: 50%; background: #00FFB3; cursor: pointer; }
+        .grok-glow-outline {
+            -webkit-text-stroke: 1.5px #00FFB3;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 179, 0.6));
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 2px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #00FFB3; }
       `}</style>
     </motion.div>
   );
