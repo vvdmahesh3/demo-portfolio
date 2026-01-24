@@ -1,403 +1,428 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 import {
-  Play, Pause, SkipBack, SkipForward, Volume2, Search, X, 
-  Loader2, Music, Sparkles, ChevronRight, Disc, Activity, Terminal, Cpu, Zap
+  Play,
+  Pause,
+  Search,
+  Volume2,
+  X,
+  SkipBack,
+  SkipForward,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
 
-interface LabProps { onClose: () => void; }
-interface Song { id: string; title: string; artist: string; banner: string; }
+interface LabProps {
+  onClose: () => void;
+}
 
-const MBackground: React.FC<LabProps> = ({ onClose }) => {
-  // --- CORE STATE ---
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playerReady, setPlayerReady] = useState(false);
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  banner: string;
+}
+
+const API_URL = "https://mahesh-backend-hub.onrender.com";
+
+/* ---------------- UTILS ---------------- */
+
+function extractAverageColor(imgUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = imgUrl;
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d")!;
+      canvas.width = 40;
+      canvas.height = 40;
+      ctx.drawImage(img, 0, 0, 40, 40);
+
+      const data = ctx.getImageData(0, 0, 40, 40).data;
+      let r = 0, g = 0, b = 0;
+
+      for (let i = 0; i < data.length; i += 4) {
+        r += data[i];
+        g += data[i + 1];
+        b += data[i + 2];
+      }
+
+      const count = data.length / 4;
+      resolve(`rgb(${(r / count) | 0}, ${(g / count) | 0}, ${(b / count) | 0})`);
+    };
+
+    img.onerror = () => resolve("#00ffb3");
+  });
+}
+
+/* ---------------- COMPONENT ---------------- */
+
+export default function MusicLab({ onClose }: LabProps) {
+  const playerRef = useRef<any>(null);
+
+  const [ready, setReady] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [volume, setVolume] = useState(70);
+
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Song[]>([]);
   const [loading, setLoading] = useState(false);
-  const [volume, setVolume] = useState(70);
+
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [accent, setAccent] = useState("#00ffb3");
 
-  // --- SYSTEM SIMULATION STATES ---
-  const [isDevMode, setIsDevMode] = useState(false);
-  const [systemStatus, setSystemStatus] = useState("INITIALIZING");
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0, v: 0 });
+  /* ----------- Magnetic Button Motion ----------- */
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const springX = useSpring(mx, { stiffness: 120, damping: 15 });
+  const springY = useSpring(my, { stiffness: 120, damping: 15 });
 
-  const playerRef = useRef<any>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const lastMouse = useRef({ x: 0, y: 0, time: 0 });
-  const API_URL = "https://mahesh-backend-hub.onrender.com";
+  const handleMagnet = (e: React.MouseEvent) => {
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    mx.set((e.clientX - rect.left - rect.width / 2) / 2);
+    my.set((e.clientY - rect.top - rect.height / 2) / 2);
+  };
 
-  // ================= 1. AI BOOT SEQUENCE =================
-  useEffect(() => {
-    const sequence = ["LOADING CORE...", "NEURAL_NET: OK", "USER_DETECTED", "SYSTEM OPERATIONAL"];
-    sequence.forEach((msg, i) => {
-      setTimeout(() => setSystemStatus(msg), i * 600);
-    });
-  }, []);
+  const resetMagnet = () => {
+    mx.set(0);
+    my.set(0);
+  };
 
-  // ================= 2. MATH-DRIVEN MOUSE VELOCITY =================
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const now = Date.now();
-      const dt = now - lastMouse.current.time;
-      const dx = e.clientX - lastMouse.current.x;
-      const dy = e.clientY - lastMouse.current.y;
-      const velocity = Math.sqrt(dx * dx + dy * dy) / (dt || 1);
-      
-      setMousePos({ x: e.clientX, y: e.clientY, v: velocity });
-      lastMouse.current = { x: e.clientX, y: e.clientY, time: now };
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  // ================= 3. MAGNETIC NEURAL SIMULATION (CANVAS) =================
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let particles: any[] = [];
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-
-    class Particle {
-      x: number; y: number; baseX: number; baseY: number; size: number; density: number;
-      constructor() {
-        this.x = Math.random() * canvas!.width;
-        this.y = Math.random() * canvas!.height;
-        this.baseX = this.x;
-        this.baseY = this.y;
-        this.size = Math.random() * 2 + 1;
-        this.density = (Math.random() * 30) + 1;
-      }
-      draw() {
-        ctx!.fillStyle = isDevMode ? "rgba(0, 255, 179, 1)" : "rgba(0, 255, 179, 0.4)";
-        ctx!.beginPath();
-        ctx!.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx!.fill();
-      }
-      update() {
-        let dx = mousePos.x - this.x;
-        let dy = mousePos.y - this.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-        let forceDirectionX = dx / distance;
-        let forceDirectionY = dy / distance;
-        let maxDistance = 200;
-        let force = (maxDistance - distance) / maxDistance;
-        let directionX = forceDirectionX * force * this.density;
-        let directionY = forceDirectionY * force * this.density;
-
-        if (distance < maxDistance) {
-          this.x -= directionX;
-          this.y -= directionY;
-        } else {
-          if (this.x !== this.baseX) {
-            let dx = this.x - this.baseX;
-            this.x -= dx / 15;
-          }
-          if (this.y !== this.baseY) {
-            let dy = this.y - this.baseY;
-            this.y -= dy / 15;
-          }
-        }
-      }
-    }
-
-    const init = () => {
-      particles = [];
-      const particleCount = (canvas.width * canvas.height) / 8000;
-      for (let i = 0; i < particleCount; i++) particles.push(new Particle());
-    };
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach((p, i) => {
-        p.draw();
-        p.update();
-        for (let j = i; j < particles.length; j++) {
-          let dx = particles[i].x - particles[j].x;
-          let dy = particles[i].y - particles[j].y;
-          let distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance < 100) {
-            ctx.strokeStyle = `rgba(0, 255, 179, ${1 - distance / 100 - 0.75})`;
-            ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-          }
-        }
-      });
-      requestAnimationFrame(animate);
-    };
-
-    window.addEventListener("resize", resize);
-    resize(); init(); animate();
-    return () => window.removeEventListener("resize", resize);
-  }, [mousePos, isDevMode]);
-
-  // ================= 4. YOUTUBE ENGINE =================
+  /* ----------- YouTube Engine ----------- */
   useEffect(() => {
     if (!(window as any).YT) {
       const tag = document.createElement("script");
       tag.src = "https://www.youtube.com/iframe_api";
       document.body.appendChild(tag);
     }
+
     (window as any).onYouTubeIframeAPIReady = () => {
-      playerRef.current = new (window as any).YT.Player("yt-player-instance", {
-        height: "0", width: "0",
-        playerVars: { controls: 0, rel: 0, origin: window.location.origin },
+      playerRef.current = new (window as any).YT.Player("yt-player", {
+        height: "0",
+        width: "0",
+        playerVars: { controls: 0 },
         events: {
-          onReady: (e: any) => { e.target.setVolume(volume); setPlayerReady(true); },
+          onReady: (e: any) => {
+            e.target.setVolume(volume);
+            setReady(true);
+          },
           onStateChange: (e: any) => {
-            if (e.data === 1) setIsPlaying(true);
-            if (e.data === 2 || e.data === 0) setIsPlaying(false);
+            if (e.data === 1) setPlaying(true);
+            if (e.data === 2 || e.data === 0) setPlaying(false);
           },
         },
       });
     };
   }, []);
 
-  const selectSong = (song: Song) => {
-    if (!playerReady) return;
-    setIsTransitioning(true);
+  const playSong = async (song: Song) => {
+    if (!ready) return;
     setCurrentSong(song);
     playerRef.current.loadVideoById(song.id);
-    setIsPlaying(true);
+    setPlaying(true);
     setSearchOpen(false);
-    setTimeout(() => setIsTransitioning(false), 500);
+
+    const color = await extractAverageColor(song.banner);
+    setAccent(color);
   };
 
-  const handleSearch = async () => {
+  const searchMusic = async () => {
     if (!query.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/music-search?q=${encodeURIComponent(query)}`);
+      const res = await fetch(
+        `${API_URL}/api/music-search?q=${encodeURIComponent(query)}`
+      );
       setResults(await res.json());
-    } catch { setResults([]); } finally { setLoading(false); }
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      exit={{ opacity: 0 }} 
-      className={`fixed inset-0 z-[200] bg-[#020202] overflow-hidden flex flex-col items-center justify-center ${isTransitioning ? 'animate-hit' : ''}`}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 z-[200] bg-[#050505] overflow-hidden flex items-center justify-center"
+      style={{ ["--accent" as any]: accent }}
     >
-      <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-40 pointer-events-none" />
-      <div id="yt-player-instance" className="absolute invisible" />
+      <div id="yt-player" className="hidden" />
 
-      {/* --- HUD HEADER (Concept 1 & 9) --- */}
-      <div className="absolute top-0 left-0 w-full p-10 flex justify-between items-start pointer-events-none z-[210]">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-[#00FFB3] text-[10px] font-black uppercase tracking-[0.4em]">
-            <Cpu size={14} className={isPlaying ? "animate-pulse" : ""} /> {systemStatus}
-          </div>
-          <div className="text-white/20 text-[8px] uppercase tracking-[0.2em] font-mono">
-            NODE: 0xMAHESH_HUB // LATENCY: 0.12ms
-          </div>
-        </div>
-        <div className="flex gap-4 pointer-events-auto">
-          <button 
-            onClick={() => setIsDevMode(!isDevMode)} 
-            className={`p-3 rounded-xl border transition-all ${isDevMode ? 'bg-[#00FFB3]/20 border-[#00FFB3] text-[#00FFB3]' : 'bg-white/5 border-white/10 text-white/40'}`}
-          >
-            <Terminal size={18} />
-          </button>
-          <button onClick={onClose} className="p-3 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-red-500 hover:bg-red-500/10 transition-all">
-            <X size={20} />
-          </button>
-        </div>
+      {/* 🌈 Ambient Glow */}
+      <div className="absolute inset-0">
+        <motion.div
+          animate={{ opacity: playing ? 0.6 : 0.25 }}
+          className="absolute inset-0 blur-[120px]"
+          style={{
+            background: `radial-gradient(circle at center, var(--accent), transparent 70%)`,
+          }}
+        />
       </div>
 
-      {/* --- CENTERED IDENTITY (Concept 7: Cinematic Tilt) --- */}
-      <div className="relative z-10 text-center pointer-events-none select-none">
-        <motion.div 
-           style={{ 
-             rotateX: (mousePos.y - (typeof window !== 'undefined' ? window.innerHeight / 2 : 0)) * -0.01, 
-             rotateY: (mousePos.x - (typeof window !== 'undefined' ? window.innerWidth / 2 : 0)) * 0.01 
-           }}
-        >
-          <h2 className="text-7xl md:text-[140px] font-black uppercase tracking-tighter leading-[0.75] text-white">
-            V V D MAHESH <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-[#00FFB3] to-[#00FFB3] drop-shadow-[0_0_60px_rgba(0,255,179,0.5)] italic">
-              PERURI
-            </span>
-          </h2>
-          <div className="mt-10 flex items-center justify-center gap-6 opacity-40">
-            <div className="h-[1px] w-24 bg-gradient-to-r from-transparent to-[#00FFB3]" />
-            <span className="text-[10px] tracking-[0.8em] text-white uppercase font-mono">Digital Architect</span>
-            <div className="h-[1px] w-24 bg-gradient-to-l from-transparent to-[#00FFB3]" />
-          </div>
-        </motion.div>
-      </div>
+      {/* ✨ Floating Particles */}
+      {[...Array(18)].map((_, i) => (
+        <motion.span
+          key={i}
+          className="absolute w-1 h-1 rounded-full bg-white/20"
+          animate={{
+            y: [-20, -300],
+            opacity: [0, 1, 0],
+          }}
+          transition={{
+            duration: 10 + Math.random() * 10,
+            repeat: Infinity,
+            delay: Math.random() * 10,
+          }}
+          style={{
+            left: `${Math.random() * 100}%`,
+            bottom: "-10px",
+          }}
+        />
+      ))}
 
-      {/* --- PLAYGROUND DATA (Concept 8) --- */}
-      <AnimatePresence>
-        {isDevMode && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="absolute inset-0 pointer-events-none border border-[#00FFB3]/10 z-40"
+      {/* 🧊 Main Glass Container */}
+      <div className="relative z-10 w-[92%] max-w-6xl h-[75vh] rounded-[40px] backdrop-blur-3xl bg-white/5 border border-white/10 shadow-[0_40px_120px_rgba(0,0,0,0.9)] overflow-hidden grid md:grid-cols-2">
+
+        {/* LEFT – Vinyl */}
+        <div className="flex flex-col items-center justify-center gap-8 p-10">
+          <motion.div
+            animate={playing ? { rotate: 360 } : {}}
+            transition={{ repeat: Infinity, duration: 18, ease: "linear" }}
+            className="relative w-72 h-72 rounded-full"
+            style={{
+              boxShadow: `0 0 120px var(--accent)`,
+            }}
           >
-            <div className="absolute top-28 left-10 p-4 bg-black/80 backdrop-blur-md border border-[#00FFB3]/20 rounded-lg font-mono text-[9px] text-[#00FFB3] leading-relaxed">
-              &gt; RAW_X: {mousePos.x}px<br/>
-              &gt; RAW_Y: {mousePos.y}px<br/>
-              &gt; VELOCITY: {mousePos.v.toFixed(3)}<br/>
-              &gt; AUDIO_MODE: YOUTUBE_EXT
-            </div>
+            <div className="absolute inset-0 rounded-full bg-black/40 backdrop-blur-xl border border-white/10" />
+
+            <img
+              src={
+                currentSong?.banner ||
+                "https://images.unsplash.com/photo-1511379938547-c1f69419868d"
+              }
+              className="absolute inset-6 rounded-full object-cover"
+            />
+
+            <div className="absolute inset-[45%] rounded-full bg-black shadow-inner" />
           </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* --- HUD PLAYER DOCK (Concept 4 & 5) --- */}
-      <div className="absolute bottom-12 w-full max-w-5xl px-8 z-50">
-        <div className="h-28 rounded-[35px] bg-black/40 backdrop-blur-3xl border border-white/10 shadow-[0_30px_100px_rgba(0,0,0,0.9)] flex items-center justify-between px-10 relative overflow-hidden group hover:border-[#00FFB3]/30 transition-all duration-500">
-          
-          {/* Top Edge Frequency Visualizer */}
-          <div className="absolute top-0 left-0 w-full flex items-end gap-[2px] h-[3px]">
-             {[...Array(60)].map((_, i) => (
-               <motion.div 
-                 key={i} 
-                 animate={isPlaying ? { height: [2, Math.random() * 15, 2], opacity: [0.2, 0.8, 0.2] } : { height: 1, opacity: 0.1 }} 
-                 className="flex-1 bg-[#00FFB3]"
-               />
-             ))}
-          </div>
-
-          {/* Metadata */}
-          <div className="flex items-center gap-6 min-w-[320px]">
-            {currentSong ? (
-              <div className="flex items-center gap-5">
-                <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-white/20 shadow-2xl transition-transform group-hover:rotate-3">
-                  <img src={currentSong.banner} className="w-full h-full object-cover" alt="art" />
-                  {isPlaying && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <Zap size={20} className="text-[#00FFB3] animate-pulse" />
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <h4 className="text-[11px] font-black uppercase text-white tracking-widest truncate max-w-[180px]">{currentSong.title}</h4>
-                  <p className="text-[9px] font-bold text-[#00FFB3] uppercase tracking-[0.3em] mt-1 opacity-60">ID // {currentSong.artist}</p>
-                </div>
-              </div>
-            ) : (
-              <div onClick={() => setSearchOpen(true)} className="flex items-center gap-4 cursor-pointer text-white/20 hover:text-[#00FFB3] transition-all">
-                <Activity size={20} className="animate-pulse" />
-                <span className="text-[10px] uppercase font-black tracking-[0.5em]">System Idle // Initialize</span>
-              </div>
-            )}
+          <div className="text-center">
+            <h2 className="text-xl font-bold tracking-widest text-white">
+              {currentSong?.title || "SELECT A TRACK"}
+            </h2>
+            <p className="text-xs mt-1 tracking-wider text-[var(--accent)]">
+              {currentSong?.artist || "Let the interface breathe with sound"}
+            </p>
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-10">
-            <button onClick={() => playerRef.current?.seekTo(playerRef.current.getCurrentTime() - 10)} className="text-white/10 hover:text-white transition-colors"><SkipBack size={26} /></button>
-            <motion.button 
-              whileHover={{ scale: 1.1, boxShadow: "0 0 40px rgba(0, 255, 179, 0.4)" }} 
-              whileTap={{ scale: 0.9 }} 
-              onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()} 
-              className="w-20 h-20 rounded-full bg-[#00FFB3] text-black flex items-center justify-center shadow-2xl"
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() =>
+                playerRef.current?.seekTo(
+                  playerRef.current.getCurrentTime() - 10
+                )
+              }
+              className="icon-btn"
             >
-              {isPlaying ? <Pause size={32} fill="black" /> : <Play size={32} fill="black" className="ml-1" />}
+              <SkipBack />
+            </button>
+
+            <motion.button
+              onMouseMove={handleMagnet}
+              onMouseLeave={resetMagnet}
+              style={{ x: springX, y: springY, background: "var(--accent)" }}
+              onClick={() =>
+                playing
+                  ? playerRef.current.pauseVideo()
+                  : playerRef.current.playVideo()
+              }
+              className="w-20 h-20 rounded-full text-black flex items-center justify-center shadow-xl"
+            >
+              {playing ? <Pause /> : <Play className="ml-1" />}
             </motion.button>
-            <button onClick={() => playerRef.current?.seekTo(playerRef.current.getCurrentTime() + 10)} className="text-white/10 hover:text-white transition-colors"><SkipForward size={26} /></button>
+
+            <button
+              onClick={() =>
+                playerRef.current?.seekTo(
+                  playerRef.current.getCurrentTime() + 10
+                )
+              }
+              className="icon-btn"
+            >
+              <SkipForward />
+            </button>
           </div>
 
-          {/* Tools */}
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-4 bg-white/5 px-5 py-2.5 rounded-full border border-white/5">
-               <Volume2 size={16} className="text-[#00FFB3]" />
-               <input type="range" min="0" max="100" value={volume} onChange={(e) => { setVolume(parseInt(e.target.value)); playerRef.current?.setVolume(parseInt(e.target.value)); }} className="w-24 accent-[#00FFB3] h-[2px] cursor-pointer" />
+          {/* Volume */}
+          <div className="flex items-center gap-3 w-full max-w-xs">
+            <Volume2 size={18} className="text-[var(--accent)]" />
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={volume}
+              onChange={(e) => {
+                const v = parseInt(e.target.value);
+                setVolume(v);
+                playerRef.current?.setVolume(v);
+              }}
+              className="flex-1 accent-[var(--accent)]"
+            />
+          </div>
+        </div>
+
+        {/* RIGHT – Story */}
+        <div className="relative flex flex-col justify-between p-10">
+          <div>
+            <div className="flex items-center gap-2 text-xs tracking-widest text-[var(--accent)] mb-4">
+              <Sparkles size={14} /> SIGNATURE INTERFACE
             </div>
-            <button onClick={() => setSearchOpen(true)} className="w-16 h-16 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-black hover:bg-[#00FFB3] flex items-center justify-center transition-all">
-              <Search size={24} />
+            <h1 className="text-5xl font-black text-white leading-tight">
+              IMMERSIVE
+              <br />
+              MUSIC LAB
+            </h1>
+            <p className="text-white/40 mt-4 max-w-sm text-sm">
+              A living interface that reacts to sound, motion and emotion.
+              Designed to demonstrate interaction engineering and creative UX.
+            </p>
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="action-btn"
+            >
+              <Search size={18} />
+              Discover Music
+            </button>
+
+            <button
+              onClick={onClose}
+              className="action-btn subtle"
+            >
+              <X size={18} />
+              Exit
             </button>
           </div>
         </div>
       </div>
 
-      {/* --- DASHBOARD SEARCH OVERLAY (With Cinematic Scroll) --- */}
+      {/* 🔍 Search Panel */}
       <AnimatePresence>
         {searchOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-            className="absolute inset-0 z-[300] flex items-center justify-center p-6 bg-black/95 backdrop-blur-3xl"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            className="absolute inset-0 z-[300] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6"
           >
-            <motion.div 
-              initial={{ y: 50, scale: 0.95 }} animate={{ y: 0, scale: 1 }} 
-              className="w-full max-w-3xl bg-[#050505] border border-white/10 rounded-[50px] p-12 relative shadow-3xl overflow-hidden"
-            >
-              <div className="flex items-center justify-between mb-12">
-                <div className="flex items-center gap-3 text-[10px] font-black text-[#00FFB3] uppercase tracking-[0.6em]">
-                  <Sparkles size={18} className="animate-spin-slow" /> Global Interface Search
-                </div>
-                <button onClick={() => setSearchOpen(false)} className="text-white/20 hover:text-red-500 transition-colors"><X size={24} /></button>
-              </div>
-
-              <div className="flex gap-4 mb-10">
-                <input 
-                  autoFocus value={query} 
-                  onChange={(e) => setQuery(e.target.value)} 
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
-                  className="flex-1 bg-white/[0.03] border border-white/10 px-8 py-6 rounded-3xl text-white outline-none focus:border-[#00FFB3]/50 transition-all text-lg font-mono placeholder:text-white/5" 
-                  placeholder="&gt; SEARCH_QUERY_..." 
+            <div className="w-full max-w-3xl bg-[#060606] rounded-[30px] border border-white/10 p-8">
+              <div className="flex gap-3 mb-6">
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && searchMusic()}
+                  placeholder="Search your vibe..."
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none"
                 />
-                <button onClick={handleSearch} className="bg-[#00FFB3] text-black px-12 rounded-3xl font-black text-xs tracking-widest uppercase hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(0,255,179,0.3)]">
-                  {loading ? <Loader2 className="animate-spin" /> : "QUERY"}
+                <button
+                  onClick={searchMusic}
+                  className="px-6 rounded-xl font-semibold text-black"
+                  style={{ background: "var(--accent)" }}
+                >
+                  {loading ? <Loader2 className="animate-spin" /> : "Search"}
+                </button>
+                <button
+                  onClick={() => setSearchOpen(false)}
+                  className="px-4 rounded-xl bg-white/5 text-white/60"
+                >
+                  <X />
                 </button>
               </div>
 
-              {/* DYNAMIC SCROLLABLE RESULTS AREA */}
-              <div className="space-y-4 max-h-[480px] overflow-y-auto pr-6 custom-scrollbar">
-                {results.length > 0 ? (
-                  results.map((song) => (
-                    <motion.div 
-                      key={song.id} 
-                      whileHover={{ x: 15, backgroundColor: "rgba(0, 255, 179, 0.05)" }} 
-                      onClick={() => selectSong(song)} 
-                      className="flex items-center gap-6 p-5 rounded-[35px] bg-white/[0.02] border border-transparent hover:border-[#00FFB3]/20 cursor-pointer transition-all group"
-                    >
-                      <div className="relative w-28 aspect-video rounded-2xl overflow-hidden shadow-2xl">
-                        <img src={song.banner} className="w-full h-full object-cover" alt="art" />
-                        <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors flex items-center justify-center">
-                           <Play size={16} className="text-white opacity-0 group-hover:opacity-100 transition-opacity translate-y-1 group-hover:translate-y-0 duration-300" />
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <h5 className="text-[13px] font-black text-white group-hover:text-[#00FFB3] uppercase tracking-wide transition-colors">{song.title}</h5>
-                        <p className="text-[10px] text-white/30 uppercase mt-1 font-bold tracking-[0.2em]">{song.artist}</p>
-                      </div>
-                      <ChevronRight size={20} className="text-white/10 group-hover:text-[#00FFB3] group-hover:translate-x-1 transition-all" />
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="text-center py-24 text-white/5 text-[11px] font-black uppercase tracking-[1.5em] italic">
-                    {loading ? "SEARCHING_DATA_..." : "AWAITING_SIGNAL"}
+              <div className="max-h-[420px] overflow-y-auto space-y-3">
+                {results.map((song) => (
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    key={song.id}
+                    onClick={() => playSong(song)}
+                    className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer transition"
+                  >
+                    <img
+                      src={song.banner}
+                      className="w-20 h-12 object-cover rounded-md"
+                    />
+                    <div>
+                      <p className="text-white text-sm font-semibold">
+                        {song.title}
+                      </p>
+                      <p className="text-xs text-white/40">{song.artist}</p>
+                    </div>
+                  </motion.div>
+                ))}
+
+                {!loading && results.length === 0 && (
+                  <div className="text-center text-white/20 text-sm py-10">
+                    Start searching 🎧
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <style>{`
-        .animate-spin-slow { animation: spin 15s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        input[type='range'] { -webkit-appearance: none; background: rgba(255,255,255,0.05); }
-        input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #00FFB3; cursor: pointer; }
+        .icon-btn {
+          width: 46px;
+          height: 46px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.08);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          transition: all .3s;
+        }
+        .icon-btn:hover {
+          background: var(--accent);
+          color: black;
+          transform: scale(1.1);
+        }
+
+        .action-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 14px 22px;
+          border-radius: 999px;
+          background: var(--accent);
+          color: black;
+          font-weight: 600;
+          transition: all .3s;
+        }
+        .action-btn:hover {
+          filter: brightness(1.1);
+          transform: translateY(-2px);
+        }
+
+        .action-btn.subtle {
+          background: rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.7);
+        }
+        .action-btn.subtle:hover {
+          background: rgba(255,255,255,0.15);
+        }
       `}</style>
     </motion.div>
   );
-};
-
-export default MBackground;
+}
