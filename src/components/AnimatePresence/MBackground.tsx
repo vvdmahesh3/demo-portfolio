@@ -3,60 +3,62 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Play, Pause, SkipBack, SkipForward, Volume2, Search, X, 
-  Loader2, Music, Sparkles, ChevronRight, Activity, Terminal, 
-  Cpu, Zap, Maximize2, ListMusic, Waves
+  Play,
+  Pause,
+  Search,
+  X,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  Sparkles,
+  Music2,
 } from "lucide-react";
 
-interface LabProps { onClose: () => void; }
-interface Song { id: string; title: string; artist: string; banner: string; }
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  banner: string;
+}
 
-const PremiumMBackground: React.FC<LabProps> = ({ onClose }) => {
-  // --- CORE STATE ---
-  const [isPlaying, setIsPlaying] = useState(false);
+interface Props {
+  onClose: () => void;
+}
+
+const API_URL = "https://mahesh-backend-hub.onrender.com";
+
+export default function PremiumMusicLab({ onClose }: Props) {
+  const playerRef = useRef<any>(null);
+
   const [playerReady, setPlayerReady] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Song[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [volume, setVolume] = useState(70);
+
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [volume, setVolume] = useState(70);
 
-  // --- SYSTEM STATES ---
-  const [systemStatus, setSystemStatus] = useState("SYSTEM_OFFLINE");
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  
-  const playerRef = useRef<any>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const API_URL = "https://mahesh-backend-hub.onrender.com";
-
-  // Boot sequence
-  useEffect(() => {
-    const sequence = ["BOOT_SEQUENCE_ALPHA", "LOADING_SHADERS", "NEURAL_LINK_ESTABLISHED", "SYSTEM_READY"];
-    sequence.forEach((msg, i) => setTimeout(() => setSystemStatus(msg), i * 800));
-  }, []);
-
-  // Cursor Tracking
-  useEffect(() => {
-    const handleMove = (e: MouseEvent) => setMousePos({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", handleMove);
-    return () => window.removeEventListener("mousemove", handleMove);
-  }, []);
-
-  // ================= YOUTUBE ENGINE =================
+  // ---------------- YOUTUBE INIT ----------------
   useEffect(() => {
     if (!(window as any).YT) {
       const tag = document.createElement("script");
       tag.src = "https://www.youtube.com/iframe_api";
       document.body.appendChild(tag);
     }
+
     (window as any).onYouTubeIframeAPIReady = () => {
-      playerRef.current = new (window as any).YT.Player("premium-player", {
-        height: "0", width: "0",
-        playerVars: { controls: 0, rel: 0, origin: window.location.origin },
+      playerRef.current = new (window as any).YT.Player("yt-player", {
+        height: "0",
+        width: "0",
+        playerVars: { controls: 0, rel: 0 },
         events: {
-          onReady: (e: any) => { e.target.setVolume(volume); setPlayerReady(true); },
+          onReady: (e: any) => {
+            e.target.setVolume(volume);
+            setPlayerReady(true);
+          },
           onStateChange: (e: any) => {
             if (e.data === 1) setIsPlaying(true);
             if (e.data === 2 || e.data === 0) setIsPlaying(false);
@@ -66,222 +68,267 @@ const PremiumMBackground: React.FC<LabProps> = ({ onClose }) => {
     };
   }, []);
 
-  const selectSong = (song: Song) => {
-    setIsTransitioning(true);
-    setCurrentSong(song);
-    playerRef.current?.loadVideoById(song.id);
-    setIsPlaying(true);
-    setTimeout(() => setIsTransitioning(false), 600);
-  };
-
+  // ---------------- SEARCH ----------------
   const handleSearch = async () => {
     if (!query.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/music-search?q=${encodeURIComponent(query)}`);
-      setResults(await res.json());
-    } catch { setResults([]); } finally { setLoading(false); }
+      const res = await fetch(
+        `${API_URL}/api/music-search?q=${encodeURIComponent(query)}`
+      );
+      const data = await res.json();
+      setResults(data || []);
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const selectSong = (song: Song) => {
+    if (!playerReady) return;
+    setCurrentSong(song);
+    playerRef.current.loadVideoById(song.id);
+    setIsPlaying(true);
+    setSearchOpen(false);
+  };
+
+  // ---------------- UI ----------------
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      className="fixed inset-0 z-[500] bg-[#050505] text-white font-sans overflow-hidden selection:bg-[#00FFB3] selection:text-black"
-    >
-      {/* Background Ambient Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,179,0.03)_0%,transparent_70%)] pointer-events-none" />
-      <div id="premium-player" className="absolute invisible" />
+    <div className="fixed inset-0 z-[200] bg-[#050505] text-white overflow-hidden">
+      <div id="yt-player" className="hidden" />
 
-      {/* --- TOP NAVIGATION BAR --- */}
-      <nav className="absolute top-0 w-full h-20 px-8 flex items-center justify-between z-[600] border-b border-white/5 backdrop-blur-md">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-             <div className="w-2 h-2 rounded-full bg-[#00FFB3] animate-pulse" />
-             <span className="font-mono text-[10px] tracking-[0.3em] text-[#00FFB3] uppercase">{systemStatus}</span>
-          </div>
-          <div className="h-4 w-[1px] bg-white/10" />
-          <span className="font-mono text-[10px] text-white/30 tracking-widest uppercase">LATENCY: 0.004ms</span>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setSearchOpen(!searchOpen)}
-            className="group flex items-center gap-3 bg-white/5 hover:bg-[#00FFB3] px-6 py-2.5 rounded-full border border-white/10 hover:border-[#00FFB3] transition-all duration-500"
-          >
-            <Search size={16} className="text-white group-hover:text-black transition-colors" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-white group-hover:text-black">Open Terminal</span>
-          </button>
-          <button onClick={onClose} className="p-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/50 transition-all text-white/40 hover:text-red-500">
-            <X size={20} />
-          </button>
-        </div>
-      </nav>
-
-      {/* --- MAIN INTERFACE (ABOVE THE 'M') --- */}
-      <main className="relative h-full w-full flex flex-col items-center justify-center p-20">
-        
-        {/* Abstract "Neural Mesh" Visualizer */}
-        <div className="absolute top-[15%] w-full flex justify-center pointer-events-none">
-          <div className="relative">
-            <motion.div 
-              animate={{ 
-                scale: isPlaying ? [1, 1.05, 1] : 1,
-                rotate: isPlaying ? [0, 5, -5, 0] : 0
-              }}
-              transition={{ repeat: Infinity, duration: 4 }}
-              className="w-[500px] h-[300px] rounded-full bg-[#00FFB3]/5 blur-[120px]" 
-            />
-            {/* Geometric accents above the name */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-[800px] h-[1px] bg-gradient-to-r from-transparent via-[#00FFB3]/20 to-transparent" />
-              <div className="absolute w-[1px] h-[400px] bg-gradient-to-b from-transparent via-[#00FFB3]/20 to-transparent" />
-            </div>
-          </div>
-        </div>
-
-        {/* HERO TITLE - Designer Quality Fonts */}
-        <div className="relative z-10 text-center">
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <h1 className="text-[120px] md:text-[180px] font-black tracking-tighter leading-[0.8] mb-4">
-              <span className="block text-white">MAHESH</span>
-              <span className="block italic bg-clip-text text-transparent bg-gradient-to-r from-[#00FFB3] to-[#00ffee] drop-shadow-[0_0_30px_rgba(0,255,179,0.3)]">PERURI</span>
-            </h1>
-            <div className="flex items-center justify-center gap-4 mt-8">
-              <div className="h-[1px] w-12 bg-[#00FFB3]/40" />
-              <span className="text-xs font-mono tracking-[0.6em] text-white/40 uppercase">Interactive Architect</span>
-              <div className="h-[1px] w-12 bg-[#00FFB3]/40" />
-            </div>
-          </motion.div>
-        </div>
-      </main>
-
-      {/* --- MODERN MUSIC DOCK (Bottom Bar) --- */}
-      <footer className="absolute bottom-8 left-0 w-full px-8 z-[700]">
-        <motion.div 
-          layout
-          className="max-w-6xl mx-auto h-24 bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[30px] flex items-center justify-between px-8 shadow-2xl"
+      {/* ---------------- PREMIUM TOP INTERFACE ---------------- */}
+      <div className="absolute top-0 w-full px-10 pt-10 z-30">
+        <motion.div
+          initial={{ opacity: 0, y: -40 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative rounded-[32px] border border-white/10 bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-xl p-8 overflow-hidden"
         >
-          {/* Track Info */}
-          <div className="flex items-center gap-5 w-[30%]">
-            <AnimatePresence mode="wait">
-              {currentSong ? (
-                <motion.div 
-                  key={currentSong.id}
-                  initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
-                  className="flex items-center gap-4"
-                >
-                  <div className="relative group">
-                    <img src={currentSong.banner} alt="art" className="w-14 h-14 rounded-xl object-cover border border-white/10 group-hover:scale-105 transition-transform duration-500" />
-                    {isPlaying && <Waves className="absolute bottom-1 right-1 text-[#00FFB3] animate-bounce" size={14} />}
-                  </div>
-                  <div className="overflow-hidden">
-                    <h4 className="text-sm font-bold text-white truncate w-48">{currentSong.title}</h4>
-                    <p className="text-[10px] font-mono text-[#00FFB3] uppercase tracking-wider opacity-60">{currentSong.artist}</p>
-                  </div>
-                </motion.div>
-              ) : (
-                <div className="flex items-center gap-4 text-white/20">
-                  <div className="w-14 h-14 rounded-xl bg-white/5 border border-dashed border-white/10 flex items-center justify-center">
-                    <Music size={20} />
-                  </div>
-                  <span className="text-[10px] uppercase font-mono tracking-widest">No Signal Detected</span>
-                </div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* Glow rail */}
+          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#00ffb3] to-transparent opacity-70" />
 
-          {/* Master Controls */}
-          <div className="flex items-center gap-8">
-            <button className="text-white/30 hover:text-white transition-colors"><SkipBack size={22} /></button>
-            <motion.button 
-              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-              onClick={() => isPlaying ? playerRef.current?.pauseVideo() : playerRef.current?.playVideo()}
-              className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.2)]"
-            >
-              {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
-            </motion.button>
-            <button className="text-white/30 hover:text-white transition-colors"><SkipForward size={22} /></button>
-          </div>
-
-          {/* Utility Box */}
-          <div className="flex items-center gap-8 w-[30%] justify-end">
-            <div className="flex items-center gap-3">
-              <Volume2 size={16} className="text-white/40" />
-              <input 
-                type="range" min="0" max="100" value={volume} 
-                onChange={(e) => {
-                  const v = parseInt(e.target.value);
-                  setVolume(v);
-                  playerRef.current?.setVolume(v);
-                }}
-                className="w-24 accent-[#00FFB3] h-1 rounded-full cursor-pointer opacity-50 hover:opacity-100 transition-opacity" 
-              />
+          <div className="flex items-center justify-between">
+            {/* Left */}
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight">
+                Neural Audio Lab
+              </h1>
+              <p className="text-white/50 text-sm mt-1">
+                High-fidelity interactive music environment
+              </p>
             </div>
-            <button onClick={() => setSearchOpen(true)} className="p-3 bg-white/5 rounded-xl border border-white/10 hover:border-[#00FFB3]/50 text-white/40 hover:text-[#00FFB3] transition-all">
-              <ListMusic size={20} />
-            </button>
-          </div>
-        </motion.div>
-      </footer>
 
-      {/* --- SEARCH OVERLAY (Upgraded with Sidebar Results) --- */}
-      <AnimatePresence>
-        {searchOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md flex justify-end"
-          >
-            <motion.div 
-              initial={{ x: 400 }} animate={{ x: 0 }} exit={{ x: 400 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="w-full max-w-md h-full bg-[#080808] border-l border-white/10 p-8 flex flex-col"
-            >
-              <div className="flex items-center justify-between mb-10">
-                <h3 className="font-mono text-xs tracking-[0.5em] text-[#00FFB3] uppercase">Search_Engine</h3>
-                <button onClick={() => setSearchOpen(false)} className="text-white/20 hover:text-white"><X size={24} /></button>
+            {/* Right */}
+            <div className="flex items-center gap-4">
+              <div className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs tracking-wider flex items-center gap-2">
+                <Sparkles size={14} className="text-[#00ffb3]" />
+                ONLINE
               </div>
 
-              <div className="relative mb-8">
-                <input 
-                  autoFocus value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  placeholder="Query track or artist..."
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-sm font-mono outline-none focus:border-[#00FFB3]/50 transition-all"
-                />
-                <button onClick={handleSearch} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#00FFB3]">
-                  {loading ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="w-12 h-12 rounded-full bg-[#00ffb3] text-black flex items-center justify-center hover:scale-105 active:scale-95 transition"
+              >
+                <Search />
+              </button>
+
+              <button
+                onClick={onClose}
+                className="w-12 h-12 rounded-full bg-white/5 border border-white/10 hover:bg-red-500/20 hover:text-red-400 transition"
+              >
+                <X />
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* ---------------- CENTER BRAND ---------------- */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <motion.h1
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 0.25, scale: 1 }}
+          className="text-[140px] font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-[#00ffb3]"
+        >
+          M
+        </motion.h1>
+      </div>
+
+      {/* ---------------- BOTTOM PLAYER ---------------- */}
+      <div className="absolute bottom-10 w-full px-8 z-40">
+        <motion.div
+          layout
+          className="mx-auto max-w-5xl rounded-[40px] bg-black/60 backdrop-blur-xl border border-white/10 p-6 flex items-center justify-between shadow-[0_40px_120px_rgba(0,0,0,0.8)]"
+        >
+          {/* Song Info */}
+          <div className="flex items-center gap-5 min-w-[280px]">
+            {currentSong ? (
+              <>
+                <motion.div
+                  whileHover={{ rotate: 2, scale: 1.05 }}
+                  className="relative w-16 h-16 rounded-2xl overflow-hidden shadow-lg"
+                >
+                  <img
+                    src={currentSong.banner}
+                    className="w-full h-full object-cover"
+                  />
+                  {isPlaying && (
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                      <Music2 className="text-[#00ffb3] animate-pulse" />
+                    </div>
+                  )}
+                </motion.div>
+
+                <div>
+                  <h3 className="font-semibold text-sm leading-tight">
+                    {currentSong.title}
+                  </h3>
+                  <p className="text-xs text-[#00ffb3]/70">
+                    {currentSong.artist}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div
+                onClick={() => setSearchOpen(true)}
+                className="cursor-pointer text-white/40 hover:text-[#00ffb3] transition"
+              >
+                Search and play music
+              </div>
+            )}
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center gap-8">
+            <button
+              onClick={() =>
+                playerRef.current?.seekTo(
+                  playerRef.current.getCurrentTime() - 10
+                )
+              }
+              className="opacity-40 hover:opacity-100 transition"
+            >
+              <SkipBack />
+            </button>
+
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              whileHover={{
+                boxShadow: "0 0 40px rgba(0,255,179,0.6)",
+              }}
+              onClick={() =>
+                isPlaying
+                  ? playerRef.current.pauseVideo()
+                  : playerRef.current.playVideo()
+              }
+              className="w-16 h-16 rounded-full bg-[#00ffb3] text-black flex items-center justify-center"
+            >
+              {isPlaying ? <Pause /> : <Play className="ml-1" />}
+            </motion.button>
+
+            <button
+              onClick={() =>
+                playerRef.current?.seekTo(
+                  playerRef.current.getCurrentTime() + 10
+                )
+              }
+              className="opacity-40 hover:opacity-100 transition"
+            >
+              <SkipForward />
+            </button>
+          </div>
+
+          {/* Volume */}
+          <div className="flex items-center gap-3">
+            <Volume2 size={16} className="text-[#00ffb3]" />
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={volume}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                setVolume(v);
+                playerRef.current?.setVolume(v);
+              }}
+              className="accent-[#00ffb3] w-24"
+            />
+          </div>
+        </motion.div>
+      </div>
+
+      {/* ---------------- SEARCH OVERLAY ---------------- */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[300] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6"
+          >
+            <motion.div
+              initial={{ y: 40, scale: 0.95 }}
+              animate={{ y: 0, scale: 1 }}
+              className="w-full max-w-4xl rounded-[40px] bg-[#0b0b0b] border border-white/10 p-10"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-lg font-semibold tracking-wide">
+                  Music Explorer
+                </h2>
+                <button
+                  onClick={() => setSearchOpen(false)}
+                  className="text-white/40 hover:text-red-400 transition"
+                >
+                  <X />
                 </button>
               </div>
 
-              {/* Scrollable Results Area */}
-              <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-                {results.length > 0 ? (
-                  results.map((song) => (
-                    <motion.div 
-                      key={song.id}
-                      whileHover={{ x: 5, backgroundColor: "rgba(255,255,255,0.03)" }}
-                      onClick={() => selectSong(song)}
-                      className="flex items-center gap-4 p-3 rounded-2xl border border-transparent hover:border-white/10 cursor-pointer group"
-                    >
-                      <div className="w-16 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src={song.banner} className="w-full h-full object-cover" alt="" />
+              {/* Search */}
+              <div className="flex gap-4 mb-8">
+                <input
+                  autoFocus
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  placeholder="Search any song or artist..."
+                  className="flex-1 rounded-xl bg-black/40 border border-white/10 px-5 py-4 outline-none focus:border-[#00ffb3]/40 transition"
+                />
+                <button
+                  onClick={handleSearch}
+                  className="px-8 rounded-xl bg-[#00ffb3] text-black font-medium hover:brightness-110 transition"
+                >
+                  {loading ? "..." : "Search"}
+                </button>
+              </div>
+
+              {/* Results */}
+              <div className="max-h-[420px] overflow-y-auto pr-3 space-y-3 custom-scroll">
+                {results.map((song) => (
+                  <motion.div
+                    key={song.id}
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => selectSong(song)}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer transition"
+                  >
+                    <img
+                      src={song.banner}
+                      className="w-20 h-12 rounded-lg object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{song.title}</div>
+                      <div className="text-xs text-white/50">
+                        {song.artist}
                       </div>
-                      <div className="flex-1 overflow-hidden">
-                        <p className="text-xs font-bold text-white truncate uppercase tracking-tight">{song.title}</p>
-                        <p className="text-[10px] text-white/30 font-mono mt-1">{song.artist}</p>
-                      </div>
-                      <ChevronRight size={14} className="text-white/10 group-hover:text-[#00FFB3]" />
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-center opacity-20">
-                    <Activity size={40} className="mb-4" />
-                    <p className="text-[10px] font-mono tracking-[0.3em] uppercase">No active data stream</p>
+                    </div>
+                    <Play size={18} className="text-[#00ffb3]" />
+                  </motion.div>
+                ))}
+
+                {!loading && results.length === 0 && (
+                  <div className="text-center py-24 text-white/30 text-sm">
+                    Start searching for music 🎵
                   </div>
                 )}
               </div>
@@ -291,29 +338,14 @@ const PremiumMBackground: React.FC<LabProps> = ({ onClose }) => {
       </AnimatePresence>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:wght@100..800&display=swap');
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #00FFB3; }
-
-        input[type='range'] {
-          -webkit-appearance: none;
-          background: rgba(255,255,255,0.05);
+        .custom-scroll::-webkit-scrollbar {
+          width: 6px;
         }
-        input[type='range']::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          height: 12px;
-          width: 12px;
-          border-radius: 50%;
-          background: #fff;
-          cursor: pointer;
-          box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background: rgba(0,255,179,0.4);
+          border-radius: 10px;
         }
       `}</style>
-    </motion.div>
+    </div>
   );
-};
-
-export default PremiumMBackground;
+}
