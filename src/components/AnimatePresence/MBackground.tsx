@@ -290,7 +290,7 @@ const PremiumMBackground: React.FC<LabProps> = ({ onClose }) => {
         )}
       </AnimatePresence>
 
-      <style jsx global>{`
+      <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:wght@100..800&display=swap');
         
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
