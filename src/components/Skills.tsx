@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  SiPython, SiJavascript, SiOracle, SiC, SiHtml5, SiCss3,
+  SiPython, SiJavascript, SiC, SiHtml5, SiCss,
   SiReact, SiFlask, SiDjango, SiTailwindcss, SiBootstrap,
   SiGit, SiGithub, SiFigma, SiMysql, SiSqlite, SiMongodb, SiFirebase,
-  SiPandas, SiNumpy, SiScikitlearn, SiGoogleanalytics, SiD3Dotjs,
-  SiAdobeaftereffects, SiAdobepremierepro, SiAdobephotoshop, SiAdobeillustrator,
+  SiPandas, SiNumpy, SiScikitlearn, SiGoogleanalytics,
   SiCplusplus, SiLeetcode
 } from "react-icons/si";
-import { Cloud, Brain, Target, Zap, Search, Code2 } from "lucide-react"; 
+import { Cloud, Brain, Target, Zap, Search, Code2, Database, Film, Pen, Image as ImageIcon, BarChart3 } from "lucide-react"; 
 import type { IconType } from "react-icons";
 
 // ---------------------- Project Data ----------------------
@@ -34,7 +33,7 @@ interface Skill {
 const HtmlCssIcon: IconType = () => (
   <div className="flex gap-1 items-center">
     <SiHtml5 className="text-[#E44D26]" />
-    <SiCss3 className="text-[#1572B6]" />
+    <SiCss className="text-[#1572B6]" />
   </div>
 );
 
@@ -60,10 +59,10 @@ const SKILLS: Record<string, Skill[]> = {
     { name: "Scikit-learn", tagline: "Machine learning", icon: SiScikitlearn, color: "#F7931E", level: 75 },
   ],
   "Creative Tools": [
-    { name: "Premiere Pro", tagline: "Video editing", icon: SiAdobepremierepro, color: "#9999FF" },
-    { name: "After Effects", tagline: "Motion graphics", icon: SiAdobeaftereffects, color: "#CF96FD" },
-    { name: "Photoshop", tagline: "Visual design", icon: SiAdobephotoshop, color: "#31A8FF" },
-    { name: "Illustrator", tagline: "Vector art", icon: SiAdobeillustrator, color: "#FF9A00" },
+    { name: "Premiere Pro", tagline: "Video editing", icon: Film as unknown as IconType, color: "#9999FF" },
+    { name: "After Effects", tagline: "Motion graphics", icon: Film as unknown as IconType, color: "#CF96FD" },
+    { name: "Photoshop", tagline: "Visual design", icon: ImageIcon as unknown as IconType, color: "#31A8FF" },
+    { name: "Illustrator", tagline: "Vector art", icon: Pen as unknown as IconType, color: "#FF9A00" },
     { name: "Figma", tagline: "UI/UX prototyping", icon: SiFigma, color: "#F24E1E" },
   ],
 };

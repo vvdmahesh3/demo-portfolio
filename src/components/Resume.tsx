@@ -1,5 +1,5 @@
 // src/components/Resume.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Download,
@@ -11,7 +11,10 @@ import {
   Keyboard,
   Briefcase,
   Code,
-  Cpu
+  Cpu,
+  Sparkles,
+  User,
+  ChevronRight,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -50,35 +53,73 @@ interface ResumeCardProps {
   highlight?: boolean;
 }
 
+interface ChatMessage {
+  role: "user" | "ai";
+  content: string;
+  timestamp: Date;
+}
+
+/* ---------------- Typing Indicator ---------------- */
+const TypingIndicator: React.FC = () => (
+  <div className="flex items-center gap-3 py-4">
+    <div className="w-7 h-7 rounded-xl bg-[#00FFB3]/10 dark:bg-[#00FFB3]/10 border border-[#00FFB3]/20 flex items-center justify-center">
+      <Bot size={14} className="text-[#00FFB3]" />
+    </div>
+    <div className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5">
+      <div className="flex gap-1">
+        {[0, 0.2, 0.4].map((d) => (
+          <motion.div
+            key={d}
+            animate={{ scale: [0.5, 1, 0.5], opacity: [0.3, 1, 0.3] }}
+            transition={{ repeat: Infinity, duration: 1.2, delay: d }}
+            className="w-2 h-2 rounded-full bg-[#00FFB3]"
+          />
+        ))}
+      </div>
+      <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 ml-2">
+        Analyzing resume data...
+      </span>
+    </div>
+  </div>
+);
+
 /* ---------------- Main Component ---------------- */
 const Resume: React.FC = () => {
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Configuration
   const resumePdfUrl = "./VVD_Mahesh(Resume).pdf"; 
   const API_URL = "https://mahesh-backend-hub.onrender.com";
 
   const suggestions = [
-    "List internships",
-    " 5 skills",
-    "Major achievements",
-    "Education",
-    "projects",
-    "Work experience",
-    "Contact information",
-    "personal"
+    { label: "Internships", icon: Briefcase },
+    { label: "Top 5 Skills", icon: Code },
+    { label: "Achievements", icon: Sparkles },
+    { label: "Education", icon: FileText },
+    { label: "Projects", icon: Cpu },
+    { label: "Experience", icon: Github },
   ];
+
+  // Auto-scroll to bottom of chat
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatHistory, loading]);
 
   const handleAsk = async (overrideQuestion?: string) => {
     const q = overrideQuestion || question;
     if (!q.trim()) return;
     
+    // Add user message to chat
+    const userMsg: ChatMessage = { role: "user", content: q.trim(), timestamp: new Date() };
+    setChatHistory((prev) => [...prev, userMsg]);
+    setQuestion("");
     setLoading(true);
-    setAnswer("");
+
     try {
       const res = await fetch(`${API_URL}/api/ask-resume`, {
         method: "POST",
@@ -87,10 +128,20 @@ const Resume: React.FC = () => {
       });
       if (!res.ok) throw new Error("Server error");
       const data = await res.json();
-      setAnswer(data.answer || "⚠️ No answer returned.");
+      const aiMsg: ChatMessage = {
+        role: "ai",
+        content: data.answer || "⚠️ No answer returned.",
+        timestamp: new Date(),
+      };
+      setChatHistory((prev) => [...prev, aiMsg]);
     } catch (err) {
       console.error("Ask error", err);
-      setAnswer("⚠️ Assistant is offline or not reachable. Please check your connection.");
+      const errorMsg: ChatMessage = {
+        role: "ai",
+        content: "⚠️ Assistant is offline or not reachable. Please check your connection.",
+        timestamp: new Date(),
+      };
+      setChatHistory((prev) => [...prev, errorMsg]);
     } finally {
       setLoading(false);
     }
@@ -183,7 +234,7 @@ const Resume: React.FC = () => {
           </div>
         </div>
 
-        {/* Neural Assistant Interface */}
+        {/* ─── Enhanced Neural Assistant Interface ─── */}
         <AnimatePresence>
           {assistantOpen && (
             <motion.div
@@ -192,62 +243,135 @@ const Resume: React.FC = () => {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden mb-12"
             >
-              <div className="p-8 rounded-[40px] bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-[#00FFB3]/20 backdrop-blur-3xl shadow-3xl">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-2 h-2 rounded-full bg-[#00FFB3] animate-pulse" />
-                  <h3 className="text-sm font-black uppercase tracking-[0.3em] dark:text-white">Mahesh_GPT Interface</h3>
+              <div className="rounded-[40px] bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-[#00FFB3]/20 backdrop-blur-3xl shadow-3xl overflow-hidden">
+                
+                {/* Header Bar */}
+                <div className="px-8 py-5 border-b border-zinc-200 dark:border-white/5 flex items-center justify-between bg-white/50 dark:bg-black/30">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="w-3 h-3 rounded-full bg-[#00FFB3] animate-pulse" />
+                      <div className="absolute inset-0 w-3 h-3 rounded-full bg-[#00FFB3] animate-ping opacity-40" />
+                    </div>
+                    <h3 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-900 dark:text-white">
+                      Mahesh_GPT
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-md bg-[#00FFB3]/10 text-[#00FFB3] text-[8px] font-black uppercase tracking-widest border border-[#00FFB3]/20">
+                      AI Powered
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[9px] font-mono text-zinc-400 tracking-wider">
+                    {chatHistory.length} messages
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="space-y-6">
-                    <div className="flex flex-wrap gap-2">
-                      {suggestions.map((s, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => { setQuestion(s); handleAsk(s); }}
-                          className="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-white/5 hover:border-blue-600 dark:hover:border-[#00FFB3] transition-all"
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex gap-3 bg-white dark:bg-black/40 p-2 rounded-[24px] border border-zinc-200 dark:border-white/10 shadow-inner">
-                      <input
-                        type="text"
-                        placeholder="Ask My Resume..."
-                        value={question}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
-                        className="flex-1 bg-transparent px-4 py-2 text-sm focus:outline-none dark:text-white font-mono"
-                      />
-                      <button
-                        onClick={() => handleAsk()}
-                        disabled={loading}
-                        className="p-4 rounded-2xl bg-zinc-900 dark:bg-[#00FFB3] text-white dark:text-black hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-50"
-                      >
-                        <Send size={18} />
-                      </button>
-                    </div>
-                  </div>
+                <div className="p-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    {/* Left: Suggestions */}
+                    <div className="lg:col-span-2 space-y-4">
+                      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-4">
+                        Quick Queries
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {suggestions.map((s) => (
+                          <button
+                            key={s.label}
+                            onClick={() => { setQuestion(s.label); handleAsk(s.label); }}
+                            className="group flex items-center gap-3 px-4 py-3 rounded-2xl text-left bg-white dark:bg-white/[0.03] border border-zinc-200 dark:border-white/5 hover:border-[#00FFB3] dark:hover:border-[#00FFB3]/40 hover:bg-[#00FFB3]/5 transition-all"
+                          >
+                            <s.icon size={14} className="text-zinc-400 group-hover:text-[#00FFB3] transition-colors flex-shrink-0" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                              {s.label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
 
-                  {/* Terminal Style Output */}
-                  <div className="bg-zinc-100 dark:bg-black p-6 rounded-3xl border border-zinc-200 dark:border-white/5 min-h-[200px] font-mono text-sm leading-relaxed overflow-y-auto max-h-[300px]">
-                    {loading ? (
-                      <div className="flex items-center gap-4 text-blue-600 dark:text-[#00FFB3]">
-                        <div className="flex gap-1">
-                          {[0, 0.15, 0.3].map(d => (
-                            <motion.span key={d} animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1, delay: d }}>_</motion.span>
-                          ))}
+                      {/* Input */}
+                      <div className="flex gap-2 bg-white dark:bg-black/40 p-2 rounded-2xl border border-zinc-200 dark:border-white/10 shadow-inner mt-6">
+                        <input
+                          type="text"
+                          placeholder="Ask anything about my resume..."
+                          value={question}
+                          onChange={(e) => setQuestion(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
+                          className="flex-1 bg-transparent px-4 py-2 text-sm focus:outline-none dark:text-white font-medium placeholder:text-zinc-400"
+                        />
+                        <button
+                          onClick={() => handleAsk()}
+                          disabled={loading || !question.trim()}
+                          className="p-3 rounded-xl bg-zinc-900 dark:bg-[#00FFB3] text-white dark:text-black hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-30 disabled:scale-100"
+                        >
+                          <Send size={16} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Right: Chat History */}
+                    <div className="lg:col-span-3 bg-white dark:bg-black/40 rounded-3xl border border-zinc-200 dark:border-white/5 overflow-hidden flex flex-col min-h-[350px] max-h-[450px]">
+                      <div className="px-5 py-3 border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-white/[0.02]">
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1.5">
+                            <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+                          </div>
+                          <span className="text-[9px] font-mono text-zinc-400 ml-2 tracking-wider">conversation_terminal</span>
                         </div>
-                        <span className="text-[10px] font-black tracking-widest uppercase">Analyzing_Data_Packets...</span>
                       </div>
-                    ) : answer ? (
-                      <div className="dark:text-zinc-300 prose prose-invert prose-sm max-w-none">
-                        <ReactMarkdown>{answer}</ReactMarkdown>
+
+                      <div className="flex-1 overflow-y-auto p-5 space-y-4 terminal-scroll">
+                        {chatHistory.length === 0 && !loading && (
+                          <div className="h-full flex flex-col items-center justify-center text-center py-12">
+                            <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 flex items-center justify-center mb-4">
+                              <Bot size={24} className="text-zinc-300 dark:text-zinc-600" />
+                            </div>
+                            <p className="text-sm font-bold text-zinc-400 dark:text-zinc-500">No queries yet</p>
+                            <p className="text-[10px] text-zinc-300 dark:text-zinc-600 mt-1 max-w-xs">
+                              Click a quick query or type your own question to start the conversation.
+                            </p>
+                          </div>
+                        )}
+
+                        {chatHistory.map((msg, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                          >
+                            {msg.role === "ai" && (
+                              <div className="w-7 h-7 rounded-xl bg-[#00FFB3]/10 border border-[#00FFB3]/20 flex items-center justify-center flex-shrink-0 mt-1">
+                                <Bot size={14} className="text-[#00FFB3]" />
+                              </div>
+                            )}
+                            <div
+                              className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed ${
+                                msg.role === "user"
+                                  ? "bg-zinc-900 dark:bg-[#00FFB3] text-white dark:text-black rounded-br-md font-bold"
+                                  : "bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/5 rounded-bl-md"
+                              }`}
+                            >
+                              {msg.role === "ai" ? (
+                                <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0.5">
+                                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                </div>
+                              ) : (
+                                <span>{msg.content}</span>
+                              )}
+                            </div>
+                            {msg.role === "user" && (
+                              <div className="w-7 h-7 rounded-xl bg-zinc-200 dark:bg-white/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                <User size={14} className="text-zinc-500 dark:text-zinc-400" />
+                              </div>
+                            )}
+                          </motion.div>
+                        ))}
+
+                        {loading && <TypingIndicator />}
+                        <div ref={chatEndRef} />
                       </div>
-                    ) : (
-                      <div className="text-zinc-400 italic">Waiting for command input or suggestion select...</div>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,16 +1,25 @@
 import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import ProximityText from "./ProximityText";
-import { Github, Linkedin, Mail } from "lucide-react";
+import { Github, Linkedin, Mail, ArrowDown, Send } from "lucide-react";
 import WithText from "./WithText";
 
 export default function Hero() {
-  const [showScrollIcon, setShowScrollIcon] = useState(false);
+  const [showCTA, setShowCTA] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    // Show the bottom scroll icon after 3 seconds
-    const scrollTimer = setTimeout(() => setShowScrollIcon(true), 3000);
-    return () => clearTimeout(scrollTimer);
+    const ctaTimer = setTimeout(() => setShowCTA(true), 2800);
+    return () => clearTimeout(ctaTimer);
   }, []);
+
+  const handleContactClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const contactSection = document.getElementById("contact");
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   const marqueeText =
     "I BUILD THE FUTURE. I BUILD THE FUTURE. I BUILD THE FUTURE. I BUILD THE FUTURE.";
@@ -85,24 +94,84 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      {showScrollIcon && (
-        <a
-          href="#about"
-          className="absolute bottom-12 flex flex-col items-center justify-center z-10 cursor-pointer"
-        >
-          <div className="relative flex items-center justify-center">
-            {/* Pulsing Glow Effect */}
-            <div className="absolute w-12 h-12 rounded-full border-2 border-accent animate-pulse-glow" />
-            <span className="text-black dark:text-white text-2xl animate-bounce">
-              ↓
-            </span>
-          </div>
-          <span className="text-xs mt-2 text-gray-600 dark:text-gray-400 font-mono tracking-widest uppercase">
-            Scroll
-          </span>
-        </a>
-      )}
+      {/* ✨ Premium Contact Me CTA — Replaces old "Scroll" indicator */}
+      <AnimatePresence>
+        {showCTA && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute bottom-10 z-20 flex flex-col items-center"
+          >
+            <button
+              onClick={handleContactClick}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              className="hero-cta-btn group relative flex flex-col items-center cursor-pointer focus:outline-none"
+              aria-label="Contact Me"
+            >
+              {/* Outer Sonar Rings */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="hero-cta-ring hero-cta-ring--1" />
+                <span className="hero-cta-ring hero-cta-ring--2" />
+                <span className="hero-cta-ring hero-cta-ring--3" />
+              </div>
+
+              {/* Core Icon Container */}
+              <motion.div
+                animate={{
+                  y: isHovered ? -4 : [0, -8, 0],
+                  scale: isHovered ? 1.15 : 1,
+                }}
+                transition={
+                  isHovered
+                    ? { duration: 0.3, ease: "easeOut" }
+                    : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
+                }
+                className="relative w-16 h-16 rounded-full flex items-center justify-center"
+              >
+                {/* Glassmorphism Background */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-600/20 to-indigo-600/20 dark:from-[#00FFB3]/20 dark:to-cyan-400/20 backdrop-blur-xl border border-blue-500/30 dark:border-[#00FFB3]/30 shadow-[0_0_30px_rgba(37,99,235,0.15)] dark:shadow-[0_0_30px_rgba(0,255,179,0.15)] group-hover:shadow-[0_0_50px_rgba(37,99,235,0.3)] dark:group-hover:shadow-[0_0_50px_rgba(0,255,179,0.3)] transition-shadow duration-500" />
+                
+                {/* Inner Gradient Core */}
+                <div className="absolute inset-[3px] rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 dark:from-[#00FFB3] dark:to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                {/* Icon */}
+                <motion.div
+                  animate={{ rotate: isHovered ? 0 : 0 }}
+                  className="relative z-10"
+                >
+                  {isHovered ? (
+                    <Send className="w-6 h-6 text-blue-600 dark:text-[#00FFB3] group-hover:text-white dark:group-hover:text-black transition-colors duration-300" />
+                  ) : (
+                    <ArrowDown className="w-6 h-6 text-blue-600 dark:text-[#00FFB3] transition-colors duration-300" />
+                  )}
+                </motion.div>
+              </motion.div>
+
+              {/* Label Text */}
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="mt-4 relative overflow-hidden"
+              >
+                <span className="hero-cta-label block text-[10px] font-black uppercase tracking-[0.35em] text-zinc-400 dark:text-zinc-500 group-hover:text-blue-600 dark:group-hover:text-[#00FFB3] transition-colors duration-500">
+                  {isHovered ? "Let's Connect" : "Contact Me"}
+                </span>
+                {/* Animated underline */}
+                <motion.div
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: isHovered ? 1 : 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-[#00FFB3] dark:to-cyan-400 origin-left"
+                />
+              </motion.div>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
