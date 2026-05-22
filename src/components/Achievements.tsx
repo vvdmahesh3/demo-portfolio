@@ -213,9 +213,16 @@ const Achievements: React.FC = () => {
         {/* Timeline Layout */}
         <div className="relative">
           {/* Vertical Line */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-[2px] bg-gradient-to-b from-blue-600/20 via-blue-600 dark:from-[#00FFB3]/20 dark:via-[#00FFB3] to-transparent hidden md:block" />
+          <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-[2px] bg-gradient-to-b from-blue-600/10 via-blue-600/40 dark:from-[#00FFB3]/10 dark:via-[#00FFB3]/30 to-transparent hidden md:block" />
           
-          <div className="space-y-24">
+          {/* Traveling Light Pulse */}
+          <motion.div 
+            animate={{ top: ["-10%", "110%"] }} 
+            transition={{ duration: 6, repeat: Infinity, ease: "linear" }} 
+            className="absolute left-1/2 transform -translate-x-1/2 w-[3px] h-40 bg-gradient-to-b from-transparent via-blue-500 dark:via-[#00FFB3] to-transparent shadow-[0_0_15px_rgba(0,255,179,0.8)] hidden md:block z-0 rounded-full"
+          />
+
+          <div className="space-y-24 relative z-10">
             {filteredAchievements.map((achievement, index) => (
               <motion.div
                 key={achievement.title + index}
@@ -231,9 +238,12 @@ const Achievements: React.FC = () => {
                 <div className={`w-full md:w-1/2 ${index % 2 === 0 ? "md:text-right" : "md:text-left"}`}>
                   <motion.div
                     whileHover={{ scale: 1.02, y: -5 }}
-                    className="p-8 rounded-[32px] bg-zinc-50/50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-white/5 backdrop-blur-md hover:shadow-2xl dark:hover:shadow-[#00FFB3]/10 transition-all group"
+                    className="relative overflow-hidden p-8 rounded-[32px] bg-zinc-50/80 dark:bg-black/60 border border-zinc-200 dark:border-white/10 backdrop-blur-2xl hover:shadow-2xl dark:hover:shadow-[0_0_50px_rgba(0,255,179,0.15)] transition-all duration-500 group"
                   >
-                    <div className={`flex items-center gap-3 mb-4 ${index % 2 === 0 ? "justify-end" : "justify-start"}`}>
+                    {/* Inner Ambient Glow on Hover */}
+                    <div className="absolute -inset-32 bg-gradient-to-tr from-blue-600/0 via-blue-400/10 to-transparent dark:from-[#00FFB3]/0 dark:via-[#00FFB3]/10 opacity-0 group-hover:opacity-100 blur-[50px] transition-opacity duration-700 pointer-events-none" />
+                    
+                    <div className={`relative z-10 flex items-center gap-3 mb-4 ${index % 2 === 0 ? "justify-end" : "justify-start"}`}>
                       <span className="text-blue-600 dark:text-[#00FFB3] font-black text-xs">{achievement.year}</span>
                       <span className="px-3 py-1 rounded-lg bg-zinc-200 dark:bg-white/10 text-zinc-600 dark:text-zinc-400 text-[9px] font-black uppercase tracking-tighter">
                         {achievement.category}
@@ -262,9 +272,11 @@ const Achievements: React.FC = () => {
 
                 {/* Central Icon Junction */}
                 <div className="relative z-20">
-                  <div className="w-16 h-16 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-[#00FFB3]/30 flex items-center justify-center shadow-2xl group transition-all">
-                    <achievement.icon className="text-blue-600 dark:text-[#00FFB3] w-6 h-6 group-hover:scale-110 transition-transform" />
-                    <div className="absolute inset-0 rounded-3xl bg-blue-600 dark:bg-[#00FFB3] opacity-0 group-hover:opacity-20 animate-ping" />
+                  <div className="relative w-16 h-16 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-[#00FFB3]/50 flex items-center justify-center shadow-[0_0_20px_rgba(0,0,0,0.1)] dark:shadow-[0_0_30px_rgba(0,255,179,0.2)] group hover:scale-110 transition-all duration-500">
+                    <achievement.icon className="text-blue-600 dark:text-[#00FFB3] w-6 h-6 relative z-10 group-hover:scale-110 transition-transform" />
+                    {/* Expanding Rings Effect */}
+                    <div className="absolute inset-0 rounded-3xl border border-blue-400 dark:border-[#00FFB3] opacity-0 group-hover:animate-[ping_1.5s_cubic-bezier(0,0,0.2,1)_infinite]" />
+                    <div className="absolute inset-0 rounded-3xl bg-blue-600/10 dark:bg-[#00FFB3]/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </div>
 

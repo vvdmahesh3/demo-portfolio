@@ -4,14 +4,14 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/demo-portfolio/',   // 👈 ADD THIS LINE (VERY IMPORTANT)  FOR GITHUB CANNOT TAKE REACT+ VITE CODES FOR THAT WE HAVE TO CRAETE DIST FOLDER THEN GITHUB KNOW DIST FOLDER HAVE IDEX.HTML, AND CSS FILES
+  // Removed base path: Vercel serves from the root (/) by default.
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
   server: {
-    port: 5173,
-    strictPort: true,
+    port: 8080,
+    strictPort: false,
   },
 })

@@ -33,8 +33,8 @@ const PROFILES: CodingProfile[] = [
     color: "#f0f0f0",
     bgGlow: "rgba(240,240,240,0.1)",
     stats: [
-      { label: "Repos", value: "30+" },
-      { label: "Commits", value: "3000+" },
+      { label: "Repos", value: "15+" },
+      { label: "Commits", value: "1000+" },
       { label: "Stars", value: "15+" },
     ],
     tagline: "Open source • Full-Stack • AI Projects",
@@ -66,20 +66,6 @@ const PROFILES: CodingProfile[] = [
       { label: "Skills", value: "Gold" },
     ],
     tagline: "Certifications • Python • SQL",
-  },
-  {
-    platform: "GeeksForGeeks",
-    handle: "@vvdmahesh3",
-    url: "https://www.geeksforgeeks.org/profile/immahevszy",
-    icon: SiGeeksforgeeks,
-    color: "#2F8D46",
-    bgGlow: "rgba(47,141,70,0.1)",
-    stats: [
-      { label: "Articles", value: "5+" },
-      { label: "Score", value: "200+" },
-      { label: "Rank", value: "Active" },
-    ],
-    tagline: "Data Structures • Practice • Learning",
   },
 
 

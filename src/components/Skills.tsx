@@ -82,7 +82,9 @@ export default function Skills() {
   const filtered = activeCategory === "All" ? SKILLS : { [activeCategory]: SKILLS[activeCategory] };
 
   return (
-    <section id="skills" className="relative py-24 overflow-hidden bg-white dark:bg-black transition-colors duration-700">
+    <section id="skills" className="relative py-24 overflow-hidden bg-white dark:bg-[#050505] transition-colors duration-700">
+      {/* Background Decorative Grid */}
+      <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] dark:bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
       
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         
@@ -112,13 +114,16 @@ export default function Skills() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+              className={`relative overflow-hidden px-6 py-3 rounded-xl border text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-500 ${
                 activeCategory === cat
-                  ? "bg-blue-600 text-white border-blue-600 dark:bg-[#00FFB3] dark:text-black dark:border-[#00FFB3] shadow-lg shadow-blue-500/20 dark:shadow-[#00FFB3]/20"
-                  : "border-gray-200 text-gray-400 dark:border-white/10 dark:text-white/40 hover:border-blue-500 dark:hover:border-[#00FFB3]"
+                  ? "bg-zinc-900 text-white border-zinc-900 dark:bg-[#00FFB3] dark:text-black dark:border-[#00FFB3] shadow-[0_0_20px_rgba(0,100,255,0.2)] dark:shadow-[0_0_30px_rgba(0,255,179,0.3)] scale-105"
+                  : "bg-white dark:bg-zinc-900/40 border-zinc-200 text-zinc-500 dark:border-white/10 dark:text-white/40 hover:border-blue-500 dark:hover:border-[#00FFB3] hover:text-blue-600 dark:hover:text-[#00FFB3]"
               }`}
             >
-              {cat}
+              {activeCategory === cat && (
+                <motion.div layoutId="activeCategoryGlow" className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 dark:from-[#00FFB3]/50 dark:to-cyan-400/50 blur-md pointer-events-none" />
+              )}
+              <span className="relative z-10">{cat}</span>
             </button>
           ))}
         </div>
@@ -143,9 +148,12 @@ export default function Skills() {
                     return (
                       <motion.div
                         key={skill.name}
-                        whileHover={{ y: -5 }}
-                        className="group relative p-6 rounded-2xl bg-gray-50/50 dark:bg-white/[0.03] border border-gray-100 dark:border-white/5 hover:border-blue-500/50 dark:hover:border-[#00FFB3]/50 transition-all duration-500"
+                        whileHover={{ y: -5, scale: 1.05 }}
+                        className="group relative overflow-hidden p-6 rounded-3xl bg-zinc-50/80 dark:bg-black/40 border border-zinc-200 dark:border-white/10 hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-[#00FFB3]/10 transition-all duration-500"
                       >
+                        {/* Inner Ambient Glow */}
+                        <div className="absolute -inset-10 bg-gradient-to-tr from-transparent via-blue-500/10 to-transparent dark:via-[#00FFB3]/10 opacity-0 group-hover:opacity-100 blur-[30px] transition-opacity duration-700 pointer-events-none" />
+
                         {skill.level ? (
                           <div className="absolute top-3 right-3">
                              <div className="text-[10px] font-bold text-gray-300 dark:text-white/20 group-hover:text-blue-500 dark:group-hover:text-[#00FFB3]">

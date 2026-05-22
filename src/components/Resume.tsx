@@ -92,8 +92,8 @@ const Resume: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Configuration
-  const resumePdfUrl = "./VVD_Mahesh(Resume).pdf"; 
+  // Configuration - Fixed relative path using BASE_URL
+  const resumePdfUrl = `${import.meta.env.BASE_URL}VVD_Mahesh(Resume).pdf`; 
   const API_URL = "https://mahesh-backend-hub.onrender.com";
 
   const suggestions = [
@@ -121,24 +121,60 @@ const Resume: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/ask-resume`, {
+      // Upgraded to real-time professional AI using Gemini
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      
+      const resumeContext = `
+      Name: Mahesh (VVD Mahesh)
+      Role: Full Stack & AI Engineer
+      Skills: React, TypeScript, Node.js, Python, AI/ML, AWS, Docker, TailwindCSS, PostgreSQL, MongoDB, Framer Motion.
+      Certifications: AWS Cloud Practitioner (2025), Microsoft Generative AI (2025), IBM AI Certification (2025), Microsoft Office Specialist (2019), Premiere Pro Editor.
+      Experience & Internships: HR Intern at TEN (2025), Software Dev Intern at Anurag IT Solutions (2023).
+      Projects: CrisisSignal AI (Disaster Prediction Engine), Placement Tracker (Real-time Dashboard), WorkFreeMusic.
+      Coding Profiles: GitHub (@vvdmahesh3, 1000+ commits), LeetCode (150+ problems), HackerRank (5 stars Python/SQL).
+      Education: (Please advise the user to download the PDF resume from the 'Download' button for specific university and degree details, but mention that Mahesh is formally educated in technology and software development).
+      `;
+
+      // Context for the AI to act as Mahesh's professional resume bot
+      const systemPrompt = `You are Mahesh's highly professional AI assistant. You answer questions about Mahesh's resume, skills, achievements, and portfolio based ONLY on the provided Resume Data. You must be polite, concise, and format your answers clearly using Markdown (bullet points, bold text). If asked who you are, introduce yourself as Mahesh's Professional Neural Assistant.\n\nRESUME DATA:\n${resumeContext}\n\nUSER QUERY: ${q.trim()}`;
+
+      if (!apiKey) {
+         // Fallback to local answering if API key is not yet configured
+         setTimeout(() => {
+           setChatHistory((prev) => [...prev, {
+             role: "ai", 
+             content: "⚠️ **System Notice**: API Key is missing. Please add `VITE_GEMINI_API_KEY` to your `.env` file to activate my full neural capabilities. For now, I can tell you Mahesh is an exceptional Full Stack & AI Engineer!", 
+             timestamp: new Date()
+           }]);
+           setLoading(false);
+         }, 1500);
+         return;
+      }
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q.trim() }),
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: systemPrompt }] }]
+        })
       });
-      if (!res.ok) throw new Error("Server error");
+      
+      if (!res.ok) throw new Error("AI Engine request failed.");
+      
       const data = await res.json();
+      const answer = data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm currently processing a heavy load. Please try again.";
+
       const aiMsg: ChatMessage = {
         role: "ai",
-        content: data.answer || "⚠️ No answer returned.",
+        content: answer,
         timestamp: new Date(),
       };
       setChatHistory((prev) => [...prev, aiMsg]);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Ask error", err);
       const errorMsg: ChatMessage = {
         role: "ai",
-        content: "⚠️ Assistant is offline or not reachable. Please check your connection.",
+        content: `⚠️ **Neural Link Disconnected**: ${err.message}. Please check your connection or API key.`,
         timestamp: new Date(),
       };
       setChatHistory((prev) => [...prev, errorMsg]);
@@ -307,7 +343,7 @@ const Resume: React.FC = () => {
                     </div>
 
                     {/* Right: Chat History */}
-                    <div className="lg:col-span-3 bg-white dark:bg-black/40 rounded-3xl border border-zinc-200 dark:border-white/5 overflow-hidden flex flex-col min-h-[350px] max-h-[450px]">
+                    <div className="lg:col-span-3 bg-white dark:bg-black/40 rounded-3xl border border-zinc-200 dark:border-white/5 overflow-hidden flex flex-col h-[400px]">
                       <div className="px-5 py-3 border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-white/[0.02]">
                         <div className="flex items-center gap-2">
                           <div className="flex gap-1.5">
